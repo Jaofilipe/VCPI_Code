@@ -4,7 +4,9 @@
 # User-specific files
 *.suo
 *.user
+*.filters
 *.userosscache
+*.sln
 *.sln.docstates
 
 # User-specific files (MonoDevelop/Xamarin Studio)
