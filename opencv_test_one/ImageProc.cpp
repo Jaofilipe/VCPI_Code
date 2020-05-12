@@ -4,6 +4,7 @@
 #include <iostream>
 #include <algorithm>
 #include <math.h>
+#include <deque>
 
 Mat drawShadedSquare(TipoQuadrado tipo) {
 	Mat square = Mat(256, 256, CV_8UC1);
@@ -25,7 +26,7 @@ Mat drawShadedSquare(TipoQuadrado tipo) {
 		}
 		break;
 	}
-	case corner: {         //square with shadow on corner
+	case TipoQuadrado::corner: {         //square with shadow on corner
 		for (int i = 0; i < square.rows; i++) {
 			for (int j = 0; j < square.cols; j++) {
 				square.data[(j*square.cols) + i] = ceil((i + j) / 2.0);
@@ -580,4 +581,435 @@ Mat vcpi_gray_to_binary_niblack(Mat src, uint kernel_size, float k) {
 
 	free(temp);
 	return out;
+}
+
+Mat vcpi_gray_to_binary_Region_Growing(Mat src, uint x, uint y, uint Lower_Limit, uint Upper_Limit, TipoVizinhanca neighborhood) {
+
+	if (src.empty()) {                	//check for input image
+		cout << "There is no image!" << endl;
+		return src;
+	}
+	else if ((neighborhood != Quatro) && (neighborhood != Oito)) {
+		cout << "Please select a valid pixel neighborhood" << endl;
+		return src;
+	}
+	else if ((x > src.cols) || (y >= src.rows)) {
+		cout << "Please select a valid pixel position" << endl;
+		return src;
+	}
+
+	typedef struct coordinates {
+		uint64_t x;
+		uint64_t y;
+	}coordinates;
+
+	uint8_t unchecked = 127;
+
+	Mat out = Mat(src.rows, src.cols, CV_8UC1, Scalar(unchecked));
+
+	uint8_t seed = src.at<uchar>(x, y);
+
+	std::deque<coordinates> fifo;
+	coordinates next_point;
+	next_point.x = x;
+	next_point.y = y;
+	fifo.push_front(next_point);
+
+	coordinates cur_point;
+
+	while (!fifo.empty()) {
+
+		cur_point = fifo.back();
+		fifo.pop_back();
+
+		if ((src.at<uchar>(cur_point.x, cur_point.y) <= (seed + Upper_Limit)) && (src.at<uchar>(cur_point.x, cur_point.y) >= (seed - Lower_Limit)) && (out.at<uchar>(cur_point.x, cur_point.y) == unchecked)) {
+
+			out.at<uchar>(cur_point.x, cur_point.y) = 255;
+			//cout << "x:"<< (int)cur_point.x << endl;
+			//cout << "y:"<< (int)cur_point.y << endl;
+			//cout << "\n" << endl;
+			if (cur_point.x == 0) {
+				if (cur_point.y == 0) {
+
+					next_point.x = cur_point.x + 1;
+					next_point.y = cur_point.y;
+					if (out.at<uchar>(next_point.x, next_point.y) == unchecked) {
+						fifo.push_front(next_point);
+					}
+					next_point.x = cur_point.x;
+					next_point.y = cur_point.y + 1;
+					if (out.at<uchar>(next_point.x, next_point.y) == unchecked) {
+						fifo.push_front(next_point);
+					}
+				}else if (cur_point.y == (src.cols - 1)) {
+
+					next_point.x = cur_point.x + 1;
+					next_point.y = cur_point.y;
+					if (out.at<uchar>(next_point.x, next_point.y) == unchecked) {
+						fifo.push_front(next_point);
+					}
+
+					next_point.x = cur_point.x;
+					next_point.y = cur_point.y - 1;
+					if (out.at<uchar>(next_point.x, next_point.y) == unchecked) {
+						fifo.push_front(next_point);
+					}
+
+				}else {
+
+					next_point.x = cur_point.x + 1;
+					next_point.y = cur_point.y;
+					if (out.at<uchar>(next_point.x, next_point.y) == unchecked) {
+						fifo.push_front(next_point);
+					}
+
+					next_point.x = cur_point.x;
+					next_point.y = cur_point.y - 1;
+					if (out.at<uchar>(next_point.x, next_point.y) == unchecked) {
+						fifo.push_front(next_point);
+					}
+
+					next_point.x = cur_point.x;
+					next_point.y = cur_point.y + 1;
+					if (out.at<uchar>(next_point.x, next_point.y) == unchecked) {
+						fifo.push_front(next_point);
+					}
+
+				}
+
+			}else if (cur_point.x == (src.rows - 1)) {
+				if (cur_point.y == 0) {
+
+					next_point.x = cur_point.x - 1;
+					next_point.y = cur_point.y;
+					if (out.at<uchar>(next_point.x, next_point.y) == unchecked) {
+						fifo.push_front(next_point);
+					}
+
+					next_point.x = cur_point.x;
+					next_point.y = cur_point.y + 1;
+					if (out.at<uchar>(next_point.x, next_point.y) == unchecked) {
+						fifo.push_front(next_point);
+					}
+
+				}else if (cur_point.y == (src.cols - 1)) {
+
+					next_point.x = cur_point.x - 1;
+					next_point.y = cur_point.y;
+					if (out.at<uchar>(next_point.x, next_point.y) == unchecked) {
+						fifo.push_front(next_point);
+					}
+
+					next_point.x = cur_point.x;
+					next_point.y = cur_point.y - 1;
+					if (out.at<uchar>(next_point.x, next_point.y) == unchecked) {
+						fifo.push_front(next_point);
+					}
+
+				}else {
+
+					next_point.x = cur_point.x - 1;
+					next_point.y = cur_point.y;
+					if (out.at<uchar>(next_point.x, next_point.y) == unchecked) {
+						fifo.push_front(next_point);
+					}
+
+					next_point.x = cur_point.x;
+					next_point.y = cur_point.y + 1;
+					if (out.at<uchar>(next_point.x, next_point.y) == unchecked) {
+						fifo.push_front(next_point);
+					}
+
+					next_point.x = cur_point.x;
+					next_point.y = cur_point.y - 1;
+					if (out.at<uchar>(next_point.x, next_point.y) == unchecked) {
+						fifo.push_front(next_point);
+					}
+
+				}
+			}else{
+				if (cur_point.y == 0) {
+
+					next_point.x = cur_point.x + 1;
+					next_point.y = cur_point.y;
+					if (out.at<uchar>(next_point.x, next_point.y) == unchecked) {
+						fifo.push_front(next_point);
+					}
+
+					next_point.x = cur_point.x - 1;
+					next_point.y = cur_point.y;
+					if (out.at<uchar>(next_point.x, next_point.y) == unchecked) {
+						fifo.push_front(next_point);
+					}
+
+					next_point.x = cur_point.x;
+					next_point.y = cur_point.y + 1;
+					if (out.at<uchar>(next_point.x, next_point.y) == unchecked) {
+						fifo.push_front(next_point);
+					}
+
+				}else if (cur_point.y == (src.cols - 1)) {
+
+					next_point.x = cur_point.x + 1;
+					next_point.y = cur_point.y;
+					if (out.at<uchar>(next_point.x, next_point.y) == unchecked) {
+						fifo.push_front(next_point);
+					}
+
+					next_point.x = cur_point.x - 1;
+					next_point.y = cur_point.y;
+					if (out.at<uchar>(next_point.x, next_point.y) == unchecked) {
+						fifo.push_front(next_point);
+					}
+
+					next_point.x = cur_point.x;
+					next_point.y = cur_point.y - 1;
+					if (out.at<uchar>(next_point.x, next_point.y) == unchecked) {
+						fifo.push_front(next_point);
+					}
+
+				}else {
+
+					next_point.x = cur_point.x + 1;
+					next_point.y = cur_point.y;
+					if (out.at<uchar>(next_point.x, next_point.y) == unchecked) {
+						fifo.push_front(next_point);
+					}
+
+					next_point.x = cur_point.x - 1;
+					next_point.y = cur_point.y;
+					if (out.at<uchar>(next_point.x, next_point.y) == unchecked) {
+						fifo.push_front(next_point);
+					}
+
+					next_point.x = cur_point.x;
+					next_point.y = cur_point.y + 1;
+					if (out.at<uchar>(next_point.x, next_point.y) == unchecked) {
+						fifo.push_front(next_point);
+					}
+
+					next_point.x = cur_point.x;
+					next_point.y = cur_point.y - 1;
+					if (out.at<uchar>(next_point.x, next_point.y) == unchecked) {
+						fifo.push_front(next_point);
+					}
+
+				}
+			}
+
+			if (neighborhood == Oito) {
+				if (cur_point.x == 0) {
+					if (cur_point.y == 0) {
+
+						next_point.x = cur_point.x + 1;
+						next_point.y = cur_point.y + 1;
+						if (out.at<uchar>(next_point.x, next_point.y) == unchecked) {
+							fifo.push_front(next_point);
+						}
+					}else if (cur_point.y == (src.cols - 1)) {
+
+						next_point.x = cur_point.x + 1;
+						next_point.y = cur_point.y - 1;
+						if (out.at<uchar>(next_point.x, next_point.y) == unchecked) {
+							fifo.push_front(next_point);
+						}
+
+					}else {
+
+						next_point.x = cur_point.x + 1;
+						next_point.y = cur_point.y + 1;
+						if (out.at<uchar>(next_point.x, next_point.y) == unchecked) {
+							fifo.push_front(next_point);
+						}
+
+						next_point.x = cur_point.x + 1;
+						next_point.y = cur_point.y - 1;
+						if (out.at<uchar>(next_point.x, next_point.y) == unchecked) {
+							fifo.push_front(next_point);
+						}
+					}
+				}
+				else if (cur_point.x == (src.rows - 1)) {
+					if (cur_point.y == 0) {
+
+						next_point.x = cur_point.x - 1;
+						next_point.y = cur_point.y + 1;
+						if (out.at<uchar>(next_point.x, next_point.y) == unchecked) {
+							fifo.push_front(next_point);
+						}
+					}else if (cur_point.y == (src.cols - 1)) {
+
+						next_point.x = cur_point.x - 1;
+						next_point.y = cur_point.y - 1;
+						if (out.at<uchar>(next_point.x, next_point.y) == unchecked) {
+							fifo.push_front(next_point);
+						}
+					}else {
+
+						next_point.x = cur_point.x - 1;
+						next_point.y = cur_point.y + 1;
+						if (out.at<uchar>(next_point.x, next_point.y) == unchecked) {
+							fifo.push_front(next_point);
+						}
+
+						next_point.x = cur_point.x - 1;
+						next_point.y = cur_point.y - 1;
+						if (out.at<uchar>(next_point.x, next_point.y) == unchecked) {
+							fifo.push_front(next_point);
+						}
+					}
+				}else{
+					if (cur_point.y == 0) {
+
+						next_point.x = cur_point.x + 1;
+						next_point.y = cur_point.y + 1;
+						if (out.at<uchar>(next_point.x, next_point.y) == unchecked) {
+							fifo.push_front(next_point);
+						}
+
+						next_point.x = cur_point.x - 1;
+						next_point.y = cur_point.y + 1;
+						if (out.at<uchar>(next_point.x, next_point.y) == unchecked) {
+							fifo.push_front(next_point);
+						}
+
+
+					}else if (cur_point.y == (src.cols - 1)) {
+
+						next_point.x = cur_point.x + 1;
+						next_point.y = cur_point.y - 1;
+						if (out.at<uchar>(next_point.x, next_point.y) == unchecked) {
+							fifo.push_front(next_point);
+						}
+
+						next_point.x = cur_point.x - 1;
+						next_point.y = cur_point.y - 1;
+						if (out.at<uchar>(next_point.x, next_point.y) == unchecked) {
+							fifo.push_front(next_point);
+						}
+					}else {
+
+						next_point.x = cur_point.x + 1;
+						next_point.y = cur_point.y + 1;
+						if (out.at<uchar>(next_point.x, next_point.y) == unchecked) {
+							fifo.push_front(next_point);
+						}
+
+						next_point.x = cur_point.x - 1;
+						next_point.y = cur_point.y + 1;
+						if (out.at<uchar>(next_point.x, next_point.y) == unchecked) {
+							fifo.push_front(next_point);
+						}
+
+						next_point.x = cur_point.x + 1;
+						next_point.y = cur_point.y - 1;
+						if (out.at<uchar>(next_point.x, next_point.y) == unchecked) {
+							fifo.push_front(next_point);
+						}
+
+						next_point.x = cur_point.x - 1;
+						next_point.y = cur_point.y - 1;
+						if (out.at<uchar>(next_point.x, next_point.y) == unchecked) {
+							fifo.push_front(next_point);
+						}
+
+					}
+				}
+			}
+		} else {
+			if (out.at<uchar>(cur_point.x, cur_point.y) == unchecked){ // if the pixel was unchecked
+				out.at<uchar>(cur_point.x, cur_point.y) = 0;
+			}
+		}
+	}
+	for (uint i = 0; i < out.cols*out.rows;i++) {
+		if (out.data[i] == unchecked) {
+			out.data[i] = 0;
+		}
+	}
+	return out;
+}
+
+Mat vcpi_gray_to_binary_otsu(Mat src) {
+
+	if (src.empty()) {                	//check for input image
+		cout << "There is no image!" << endl;
+		return src;
+	}
+
+	uint64_t gray_values[256] = { 0 };
+	long double Within_class_Variance[256] = { 0.0f };
+
+	uint64_t img_size = src.cols * src.rows;
+
+	//get the histogram of the image
+	for (uint i = 0; i < img_size; i++){
+		gray_values[src.data[i]]++;
+	}
+
+	cout << "done 1" << endl;
+	//run through the histogram of the image
+	for (uint i = 0; i <= 255; i++){
+
+		//for background
+		//calcular o weight
+		long double weight_background = 0.0f;
+		for (uint u = 0; u < i; u++){
+			weight_background += gray_values[u];
+		}
+		weight_background =(double) ((double) weight_background) / ((double)img_size);
+		
+		//calculate mean
+		double mean_background = 0.0f;
+		uint64_t holder = 0;  //set holder variable
+		for (uint u = 0; u < i; u++){
+			mean_background += (u * gray_values[u]);
+			holder += gray_values[u];
+		}
+		mean_background = (holder == 0 ? 0 : (double)((double)mean_background) / ((double)holder));
+		//cout << "mean back" << mean_background << endl;
+		//calculate variance
+		long double variance_background = 0.0;
+		for (uint u = 0; u < i; u++) {
+			variance_background += pow(((double)(u - mean_background)), 2) * ((double)gray_values[u]);
+		}
+
+		variance_background = (holder == 0 ? 0 : ((double)variance_background) / ((double)holder));
+		
+		//for foreground
+		//calcular o weight
+		long double weight_foreground = 0.0f;
+		for (uint u = i; u <= 255; u++) {
+			weight_foreground += gray_values[u];
+		}
+		weight_foreground = (double)((double)weight_foreground) / ((double)img_size);
+		//calculate mean
+		double mean_foreground = 0.0f;
+		holder = 0; //reset holder variable
+		for (uint u = i; u <= 255; u++) {
+			mean_foreground += (u * gray_values[u]);
+			holder += gray_values[u];
+		}
+		mean_foreground = (holder == 0 ? 0 : (double)((double)mean_foreground) / ((double)holder));
+		//calculate variance
+		long double variance_foreground = 0.0;
+		for (uint u = i; u <= 255; u++) {
+			variance_foreground += pow(((double)(u - mean_foreground)), 2) * ((double)gray_values[u]);
+		}
+		variance_foreground = (holder == 0 ? 0 : ((double)variance_foreground) / ((double)holder));
+
+		Within_class_Variance[i] = (long double) ((weight_background * variance_background) + (weight_foreground * variance_foreground));
+	}
+
+	double min = Within_class_Variance[0];
+	uint threshold = 0;
+	for (uint u = 0; u <= 255; u++){
+		
+		if (min > Within_class_Variance[u]){
+			min = Within_class_Variance[u];
+			threshold = u;
+		}
+	}
+	cout <<"Threshold:   " << threshold << endl;
+	return vcpi_gray_to_binary(src,threshold);
 }
