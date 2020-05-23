@@ -41,7 +41,7 @@ Mat drawShadedSquare(TipoQuadrado tipo) {
 	return square;
 }
 
-Mat find_replace_value(Mat src,uint value,uint replace_with){
+Mat find_replace_value(Mat src, uint value, uint replace_with) {
 
 	if (src.empty()) {
 		cout << "There is no image!" << endl;
@@ -52,7 +52,8 @@ Mat find_replace_value(Mat src,uint value,uint replace_with){
 	for (uint i = 0; i < src.cols*src.rows*src.channels(); i += src.channels()) {
 		if (src.data[i] == value) {
 			out.data[i] = replace_with;
-		}else {
+		}
+		else {
 			out.data[i] = src.data[i];
 		}
 	}
@@ -226,10 +227,11 @@ Mat vcpi_gray_to_binary(Mat src, int Lower_threshold, int Upper_threshold) {
 	int Up_T = Upper_threshold == NULL ? 0 : Upper_threshold;
 	Mat out = Mat(src.rows, src.cols, CV_8UC1); //Output Binary Image
 
-	for (uint i = 0; i < src.cols*src.rows; i ++) {
+	for (uint i = 0; i < src.cols*src.rows; i++) {
 		if (src.data[i] >= Low_T && src.data[i] <= Up_T) {
 			out.data[i] = 255;
-		}else {
+		}
+		else {
 			out.data[i] = 0;
 		}
 	}
@@ -263,8 +265,8 @@ Mat VCPI_Segmenta_Cor(Mat src, int Lower_h, int Upper_h, int Lower_s, int Upper_
 	split(im_HSV, HSV_Channels);                   //Split the HSV Image
 
 	Mat im_HSV_thresholded = Mat(src.rows, src.cols, CV_8UC1);   //Thresholded HSV Image variable
-	im_HSV_thresholded = vcpi_gray_to_binary(HSV_Channels[0],Low_H,Up_H) & vcpi_gray_to_binary(HSV_Channels[1], Low_S, Up_S) & vcpi_gray_to_binary(HSV_Channels[2], Low_V, Up_V); //Threshold
-	
+	im_HSV_thresholded = vcpi_gray_to_binary(HSV_Channels[0], Low_H, Up_H) & vcpi_gray_to_binary(HSV_Channels[1], Low_S, Up_S) & vcpi_gray_to_binary(HSV_Channels[2], Low_V, Up_V); //Threshold
+
 	Mat out = Mat(src.rows, src.cols, CV_8UC3);                  //RGB output Image
 
 	//Mask the Threshold result with the input RGB IMage
@@ -278,7 +280,7 @@ Mat VCPI_Segmenta_Cor(Mat src, int Lower_h, int Upper_h, int Lower_s, int Upper_
 	return out;
 }
 
-Mat vcpi_scale_gray_to_rgb(Mat src){
+Mat vcpi_scale_gray_to_rgb(Mat src) {
 
 	//check for input image
 	if (src.empty()) {
@@ -287,34 +289,40 @@ Mat vcpi_scale_gray_to_rgb(Mat src){
 	}
 	Mat out = Mat(src.rows, src.cols, CV_8UC3, Scalar(0));
 	uint j = 0;
-	for (uint i = 0; i < src.cols*src.rows*src.channels(); i += src.channels()){
+	for (uint i = 0; i < src.cols*src.rows*src.channels(); i += src.channels()) {
 		//Blue COLOR
-		if (src.data[i] >= 128){
+		if (src.data[i] >= 128) {
 			out.data[j] = 0;
-		}else if (src.data[i] >= 64){
+		}
+		else if (src.data[i] >= 64) {
 			out.data[j] = 255 - ((src.data[i] - 64) * 4); //rampa decrescente
-		}else{
+		}
+		else {
 			out.data[j] = 255;
 		}
-		
+
 		//Green COLOR
-		if (src.data[i] >= 192){
+		if (src.data[i] >= 192) {
 			out.data[j + 1] = 255 - ((src.data[i] - 192) * 4); //rampa decrescente
-		}else if (src.data[i] >= 64){
+		}
+		else if (src.data[i] >= 64) {
 			out.data[j + 1] = 255;
-		}else{
+		}
+		else {
 			out.data[j + 1] = src.data[i] * 4; //rampa crescente
 		}
-		
+
 		//Red COLOR
-		if (src.data[i] >= 192){
+		if (src.data[i] >= 192) {
 			out.data[j + 2] = 255;
-		}else if (src.data[i] >= 128){
+		}
+		else if (src.data[i] >= 128) {
 			out.data[j + 2] = (src.data[i] - 128) * 4; //rampa crescente
-		}else{
+		}
+		else {
 			out.data[j + 2] = 0;
 		}
-		j+= out.channels();
+		j += out.channels();
 	}
 	return out;
 }
@@ -324,11 +332,13 @@ Mat vcpi_convolucao(Mat src, Mat kernel) {
 
 	if (src.empty()) {                	//check for input image
 		cout << "There is no image!" << endl;
-		return src; 
-	}else if (kernel.empty()){          	//check for input kernel
+		return src;
+	}
+	else if (kernel.empty()) {          	//check for input kernel
 		cout << "There is no kernel!" << endl;
 		return src;
-	}else if ((kernel.rows%2)==0 || (kernel.rows % 2) == 0)	{ 	//kernel must not have pair dimensions, but can have different dimensions
+	}
+	else if ((kernel.rows % 2) == 0 || (kernel.rows % 2) == 0) { 	//kernel must not have pair dimensions, but can have different dimensions
 		cout << "Kernel dimensions must not be pair!" << endl;
 		return src;
 	}
@@ -338,25 +348,25 @@ Mat vcpi_convolucao(Mat src, Mat kernel) {
 
 	//get the sum of the kernel points
 	double kernel_sum = 0.0f;
-	for (uint i = 0; i < kernel.rows*kernel.cols; i++){
-			kernel_sum += (double) kernel.data[i];
+	for (uint i = 0; i < kernel.rows*kernel.cols; i++) {
+		kernel_sum += (double)kernel.data[i];
 	}
 
 	Mat out = Mat(src.rows, src.cols, CV_8UC1, Scalar(0));
 
-		for (uint x = kern_pad_x; x < (src.rows-kern_pad_x); x++) {           //run the image on one axis
-			for (uint y = kern_pad_y; y < (src.cols- kern_pad_y); y++) {      //run the image on another axis
+	for (uint x = kern_pad_x; x < (src.rows - kern_pad_x); x++) {           //run the image on one axis
+		for (uint y = kern_pad_y; y < (src.cols - kern_pad_y); y++) {      //run the image on another axis
 
-				double matrix_sum = 0.0f;                                              //variable to hold the matricial sum
-				for (int kern_x = -kern_pad_x; kern_x <= kern_pad_x; kern_x++) {       //run the kernel on one axis
-					for (int kern_y = -kern_pad_y; kern_y <= kern_pad_y; kern_y++){    //run the kernel on another axis
-																					   //calculate the sum of points + kernel values surrounding the current point
-						matrix_sum += src.at<uchar>(x + kern_x, y + kern_y)*kernel.at<uchar>(kern_x + kern_pad_x, kern_y + kern_pad_y); 
-					}
+			double matrix_sum = 0.0f;                                              //variable to hold the matricial sum
+			for (int kern_x = -kern_pad_x; kern_x <= kern_pad_x; kern_x++) {       //run the kernel on one axis
+				for (int kern_y = -kern_pad_y; kern_y <= kern_pad_y; kern_y++) {    //run the kernel on another axis
+																				   //calculate the sum of points + kernel values surrounding the current point
+					matrix_sum += src.at<uchar>(x + kern_x, y + kern_y)*kernel.at<uchar>(kern_x + kern_pad_x, kern_y + kern_pad_y);
 				}
-				out.at<uchar>(x, y) =(uchar) ((double) matrix_sum /(double) kernel_sum);
 			}
+			out.at<uchar>(x, y) = (uchar)((double)matrix_sum / (double)kernel_sum);
 		}
+	}
 
 	return out;
 }
@@ -366,10 +376,12 @@ Mat vcpi_median_filter(Mat src, uint kernel_size) {
 	if (src.empty()) {                	//check for input image
 		cout << "There is no image!" << endl;
 		return src;
-	}	else if (kernel_size == 1) { 	//kernel must not be 1x1
+	}
+	else if (kernel_size == 1) { 	//kernel must not be 1x1
 		cout << "Kernel dimensions must be greater than 1 !" << endl;
 		return src;
-	}	else if ((kernel_size % 2) == 0) { 	//kernel must not have pair dimensions, but can have different dimensions
+	}
+	else if ((kernel_size % 2) == 0) { 	//kernel must not have pair dimensions, but can have different dimensions
 		cout << "Kernel dimensions must not be pair!" << endl;
 		return src;
 	}
@@ -386,11 +398,11 @@ Mat vcpi_median_filter(Mat src, uint kernel_size) {
 
 			for (int kern_x = -kern_pad; kern_x <= kern_pad; kern_x++) {       //run the kernel on one axis
 				for (int kern_y = -kern_pad; kern_y <= kern_pad; kern_y++) {    //run the kernel on another axis
-					temp[(kernel_size*(kern_x+kern_pad))+(kern_y+kern_pad)] = src.at<uchar>(x + kern_x, y + kern_y);		   //get the current point
+					temp[(kernel_size*(kern_x + kern_pad)) + (kern_y + kern_pad)] = src.at<uchar>(x + kern_x, y + kern_y);		   //get the current point
 				}
 			}
-			sort(temp,temp+array_size);
-			out.at<uchar>(x, y) = (uchar) temp[kern_pad];
+			sort(temp, temp + array_size);
+			out.at<uchar>(x, y) = (uchar)temp[kern_pad];
 		}
 	}
 
@@ -411,7 +423,7 @@ Mat vcpi_gray_to_binary_global_mean(Mat src) {
 	for (uint i = 0; i < src.cols*src.rows; i++) {
 		acc += src.data[i];
 	}
-	threshold = ((float)(acc)/(float)(src.cols*src.rows));
+	threshold = ((float)(acc) / (float)(src.cols*src.rows));
 
 	Mat out = Mat(src.rows, src.cols, CV_8UC1); //Output Binary Image
 	for (uint i = 0; i < src.cols*src.rows; i++) {
@@ -457,9 +469,9 @@ Mat vcpi_gray_to_binary_midpoint(Mat src, uint kernel_size) {
 				}
 			}
 			sort(temp, temp + array_size);
-			threshold =  round((float)(temp[0]+temp[array_size-1])*0.5f);
+			threshold = round((float)(temp[0] + temp[array_size - 1])*0.5f);
 
-			if (src.at<uchar>(x,y) >= threshold) {
+			if (src.at<uchar>(x, y) >= threshold) {
 				out.at<uchar>(x, y) = 255;
 			}
 			else {
@@ -510,7 +522,7 @@ Mat vcpi_gray_to_binary_bernsen(Mat src, uint kernel_size, uint Cmin) {
 			else {
 				threshold = round((float)(temp[0] + temp[array_size - 1])*0.5f);
 			}
-			
+
 
 			if (src.at<uchar>(x, y) >= threshold) {
 				out.at<uchar>(x, y) = 255;
@@ -561,14 +573,14 @@ Mat vcpi_gray_to_binary_niblack(Mat src, uint kernel_size, float k) {
 				acc_mean += temp[i];
 			}
 			float mean = ((float)acc_mean) / ((float)(array_size));
-			
+
 			long double acc_std = 0.0;
 			for (uint i = 0; i < array_size; i++) {
-				acc_std = ((double)(temp[i]-mean))*((double)(temp[i] - mean));
+				acc_std = ((double)(temp[i] - mean))*((double)(temp[i] - mean));
 			}
 			double std = sqrt(((double)acc_std) / ((double)array_size));
 
-			threshold = (uint8_t) round((mean + ((double)std*k)));
+			threshold = (uint8_t)round((mean + ((double)std*k)));
 
 			if (src.at<uchar>(x, y) >= threshold) {
 				out.at<uchar>(x, y) = 255;
@@ -641,7 +653,8 @@ Mat vcpi_gray_to_binary_Region_Growing(Mat src, uint x, uint y, uint Lower_Limit
 					if (out.at<uchar>(next_point.x, next_point.y) == unchecked) {
 						fifo.push_front(next_point);
 					}
-				}else if (cur_point.y == (src.cols - 1)) {
+				}
+				else if (cur_point.y == (src.cols - 1)) {
 
 					next_point.x = cur_point.x + 1;
 					next_point.y = cur_point.y;
@@ -655,7 +668,8 @@ Mat vcpi_gray_to_binary_Region_Growing(Mat src, uint x, uint y, uint Lower_Limit
 						fifo.push_front(next_point);
 					}
 
-				}else {
+				}
+				else {
 
 					next_point.x = cur_point.x + 1;
 					next_point.y = cur_point.y;
@@ -677,7 +691,8 @@ Mat vcpi_gray_to_binary_Region_Growing(Mat src, uint x, uint y, uint Lower_Limit
 
 				}
 
-			}else if (cur_point.x == (src.rows - 1)) {
+			}
+			else if (cur_point.x == (src.rows - 1)) {
 				if (cur_point.y == 0) {
 
 					next_point.x = cur_point.x - 1;
@@ -692,7 +707,8 @@ Mat vcpi_gray_to_binary_Region_Growing(Mat src, uint x, uint y, uint Lower_Limit
 						fifo.push_front(next_point);
 					}
 
-				}else if (cur_point.y == (src.cols - 1)) {
+				}
+				else if (cur_point.y == (src.cols - 1)) {
 
 					next_point.x = cur_point.x - 1;
 					next_point.y = cur_point.y;
@@ -706,7 +722,8 @@ Mat vcpi_gray_to_binary_Region_Growing(Mat src, uint x, uint y, uint Lower_Limit
 						fifo.push_front(next_point);
 					}
 
-				}else {
+				}
+				else {
 
 					next_point.x = cur_point.x - 1;
 					next_point.y = cur_point.y;
@@ -727,7 +744,8 @@ Mat vcpi_gray_to_binary_Region_Growing(Mat src, uint x, uint y, uint Lower_Limit
 					}
 
 				}
-			}else{
+			}
+			else {
 				if (cur_point.y == 0) {
 
 					next_point.x = cur_point.x + 1;
@@ -748,7 +766,8 @@ Mat vcpi_gray_to_binary_Region_Growing(Mat src, uint x, uint y, uint Lower_Limit
 						fifo.push_front(next_point);
 					}
 
-				}else if (cur_point.y == (src.cols - 1)) {
+				}
+				else if (cur_point.y == (src.cols - 1)) {
 
 					next_point.x = cur_point.x + 1;
 					next_point.y = cur_point.y;
@@ -768,7 +787,8 @@ Mat vcpi_gray_to_binary_Region_Growing(Mat src, uint x, uint y, uint Lower_Limit
 						fifo.push_front(next_point);
 					}
 
-				}else {
+				}
+				else {
 
 					next_point.x = cur_point.x + 1;
 					next_point.y = cur_point.y;
@@ -806,7 +826,8 @@ Mat vcpi_gray_to_binary_Region_Growing(Mat src, uint x, uint y, uint Lower_Limit
 						if (out.at<uchar>(next_point.x, next_point.y) == unchecked) {
 							fifo.push_front(next_point);
 						}
-					}else if (cur_point.y == (src.cols - 1)) {
+					}
+					else if (cur_point.y == (src.cols - 1)) {
 
 						next_point.x = cur_point.x + 1;
 						next_point.y = cur_point.y - 1;
@@ -814,7 +835,8 @@ Mat vcpi_gray_to_binary_Region_Growing(Mat src, uint x, uint y, uint Lower_Limit
 							fifo.push_front(next_point);
 						}
 
-					}else {
+					}
+					else {
 
 						next_point.x = cur_point.x + 1;
 						next_point.y = cur_point.y + 1;
@@ -837,14 +859,16 @@ Mat vcpi_gray_to_binary_Region_Growing(Mat src, uint x, uint y, uint Lower_Limit
 						if (out.at<uchar>(next_point.x, next_point.y) == unchecked) {
 							fifo.push_front(next_point);
 						}
-					}else if (cur_point.y == (src.cols - 1)) {
+					}
+					else if (cur_point.y == (src.cols - 1)) {
 
 						next_point.x = cur_point.x - 1;
 						next_point.y = cur_point.y - 1;
 						if (out.at<uchar>(next_point.x, next_point.y) == unchecked) {
 							fifo.push_front(next_point);
 						}
-					}else {
+					}
+					else {
 
 						next_point.x = cur_point.x - 1;
 						next_point.y = cur_point.y + 1;
@@ -858,7 +882,8 @@ Mat vcpi_gray_to_binary_Region_Growing(Mat src, uint x, uint y, uint Lower_Limit
 							fifo.push_front(next_point);
 						}
 					}
-				}else{
+				}
+				else {
 					if (cur_point.y == 0) {
 
 						next_point.x = cur_point.x + 1;
@@ -874,7 +899,8 @@ Mat vcpi_gray_to_binary_Region_Growing(Mat src, uint x, uint y, uint Lower_Limit
 						}
 
 
-					}else if (cur_point.y == (src.cols - 1)) {
+					}
+					else if (cur_point.y == (src.cols - 1)) {
 
 						next_point.x = cur_point.x + 1;
 						next_point.y = cur_point.y - 1;
@@ -887,7 +913,8 @@ Mat vcpi_gray_to_binary_Region_Growing(Mat src, uint x, uint y, uint Lower_Limit
 						if (out.at<uchar>(next_point.x, next_point.y) == unchecked) {
 							fifo.push_front(next_point);
 						}
-					}else {
+					}
+					else {
 
 						next_point.x = cur_point.x + 1;
 						next_point.y = cur_point.y + 1;
@@ -916,13 +943,14 @@ Mat vcpi_gray_to_binary_Region_Growing(Mat src, uint x, uint y, uint Lower_Limit
 					}
 				}
 			}
-		} else {
-			if (out.at<uchar>(cur_point.x, cur_point.y) == unchecked){ // if the pixel was unchecked
+		}
+		else {
+			if (out.at<uchar>(cur_point.x, cur_point.y) == unchecked) { // if the pixel was unchecked
 				out.at<uchar>(cur_point.x, cur_point.y) = 0;
 			}
 		}
 	}
-	for (uint i = 0; i < out.cols*out.rows;i++) {
+	for (uint i = 0; i < out.cols*out.rows; i++) {
 		if (out.data[i] == unchecked) {
 			out.data[i] = 0;
 		}
@@ -943,31 +971,30 @@ Mat vcpi_gray_to_binary_otsu(Mat src) {
 	uint64_t img_size = src.cols * src.rows;
 
 	//get the histogram of the image
-	for (uint i = 0; i < img_size; i++){
+	for (uint i = 0; i < img_size; i++) {
 		gray_values[src.data[i]]++;
 	}
 
-	cout << "done 1" << endl;
 	//run through the histogram of the image
-	for (uint i = 0; i <= 255; i++){
+	for (uint i = 0; i <= 255; i++) {
 
 		//for background
 		//calcular o weight
 		long double weight_background = 0.0f;
-		for (uint u = 0; u < i; u++){
+		for (uint u = 0; u < i; u++) {
 			weight_background += gray_values[u];
 		}
-		weight_background =(double) ((double) weight_background) / ((double)img_size);
-		
+		weight_background = (double)((double)weight_background) / ((double)img_size);
+
 		//calculate mean
 		double mean_background = 0.0f;
 		uint64_t holder = 0;  //set holder variable
-		for (uint u = 0; u < i; u++){
+		for (uint u = 0; u < i; u++) {
 			mean_background += (u * gray_values[u]);
 			holder += gray_values[u];
 		}
 		mean_background = (holder == 0 ? 0 : (double)((double)mean_background) / ((double)holder));
-		//cout << "mean back" << mean_background << endl;
+
 		//calculate variance
 		long double variance_background = 0.0;
 		for (uint u = 0; u < i; u++) {
@@ -975,7 +1002,7 @@ Mat vcpi_gray_to_binary_otsu(Mat src) {
 		}
 
 		variance_background = (holder == 0 ? 0 : ((double)variance_background) / ((double)holder));
-		
+
 		//for foreground
 		//calcular o weight
 		long double weight_foreground = 0.0f;
@@ -998,18 +1025,772 @@ Mat vcpi_gray_to_binary_otsu(Mat src) {
 		}
 		variance_foreground = (holder == 0 ? 0 : ((double)variance_foreground) / ((double)holder));
 
-		Within_class_Variance[i] = (long double) ((weight_background * variance_background) + (weight_foreground * variance_foreground));
+		Within_class_Variance[i] = (long double)((weight_background * variance_background) + (weight_foreground * variance_foreground));
 	}
 
 	double min = Within_class_Variance[0];
 	uint threshold = 0;
-	for (uint u = 0; u <= 255; u++){
-		
-		if (min > Within_class_Variance[u]){
+	for (uint u = 0; u <= 255; u++) {
+
+		if (min > Within_class_Variance[u]) {
 			min = Within_class_Variance[u];
 			threshold = u;
 		}
 	}
-	cout <<"Threshold:   " << threshold << endl;
-	return vcpi_gray_to_binary(src,threshold);
+	cout << "Threshold:   " << threshold << endl;
+	return vcpi_gray_to_binary(src, threshold);
+}
+
+Mat vcpi_dilation(Mat src, TipoVizinhanca neighborhood) {
+
+	if (src.empty()) {                	//check for input image
+		cout << "There is no image!" << endl;
+		return src;
+	}
+	else if ((neighborhood != Quatro) && (neighborhood != Oito)) {
+		cout << "Please select a valid pixel neighborhood" << endl;
+		return src;
+	}
+	uint8_t array_size = (uint8_t)neighborhood + 1;
+
+	uint8_t *temp = (uint8_t *)malloc(array_size * sizeof(uint8_t));
+
+	Mat out = Mat(src.rows, src.cols, CV_8UC1, Scalar(0));
+
+	if (neighborhood == Quatro) {
+
+		for (uint x = 0; x < src.rows; x++) {
+			for (uint y = 0; y < src.cols; y++) {
+
+				fill(temp, temp + array_size, 0); //zero the array
+				if (x == 0) {
+					if (y == 0) {
+
+						temp[0] = src.at<uchar>(x, y);
+						temp[1] = src.at<uchar>(x + 1, y);
+						temp[2] = src.at<uchar>(x, y + 1);
+						out.at<uchar>(x, y) = (uint8_t)*max_element(temp, temp + array_size);
+					}
+					else if (y == (src.cols - 1)) {
+
+						temp[0] = src.at<uchar>(x, y);
+						temp[1] = src.at<uchar>(x + 1, y);
+						temp[2] = src.at<uchar>(x, y - 1);
+						out.at<uchar>(x, y) = (uint8_t)*max_element(temp, temp + array_size);
+
+					}
+					else {
+					
+						temp[0] = src.at<uchar>(x, y);
+						temp[1] = src.at<uchar>(x + 1, y);
+						temp[2] = src.at<uchar>(x, y - 1);
+						temp[3] = src.at<uchar>(x, y + 1);
+						out.at<uchar>(x, y) = (uint8_t)*max_element(temp, temp + array_size);
+
+					}
+
+				}
+				else if (x == (src.rows - 1)) {
+					if (y == 0) {
+
+						temp[0] = src.at<uchar>(x, y);
+						temp[1] = src.at<uchar>(x - 1, y);
+						temp[2] = src.at<uchar>(x, y + 1);
+						out.at<uchar>(x, y) = (uint8_t)*max_element(temp, temp + array_size);
+
+					}
+					else if (y == (src.cols - 1)) {
+
+						temp[0] = src.at<uchar>(x, y);
+						temp[1] = src.at<uchar>(x - 1, y);
+						temp[2] = src.at<uchar>(x, y - 1);
+						out.at<uchar>(x, y) = (uint8_t)*max_element(temp, temp + array_size);
+
+					}
+					else {
+
+						temp[0] = src.at<uchar>(x, y);
+						temp[1] = src.at<uchar>(x - 1, y);
+						temp[2] = src.at<uchar>(x, y - 1);
+						temp[3] = src.at<uchar>(x, y + 1);
+						out.at<uchar>(x, y) = (uint8_t)*max_element(temp, temp + array_size);
+
+					}
+				}
+				else {
+					if (y == 0) {
+
+						temp[0] = src.at<uchar>(x, y);
+						temp[1] = src.at<uchar>(x + 1, y);
+						temp[2] = src.at<uchar>(x - 1, y);
+						temp[3] = src.at<uchar>(x, y + 1);
+						out.at<uchar>(x, y) = (uint8_t)*max_element(temp, temp + array_size);
+
+					}
+					else if (y == (src.cols - 1)) {
+
+						temp[0] = src.at<uchar>(x, y);
+						temp[1] = src.at<uchar>(x + 1, y);
+						temp[2] = src.at<uchar>(x - 1, y);
+						temp[3] = src.at<uchar>(x, y - 1);
+						out.at<uchar>(x, y) = (uint8_t)*max_element(temp, temp + array_size);
+
+					}
+					else {
+
+						temp[0] = src.at<uchar>(x, y);
+						temp[1] = src.at<uchar>(x + 1, y);
+						temp[2] = src.at<uchar>(x - 1, y);
+						temp[3] = src.at<uchar>(x, y - 1);
+						temp[4] = src.at<uchar>(x, y + 1);
+						out.at<uchar>(x, y) = (uint8_t)*max_element(temp, temp + array_size);
+
+					}
+				}
+			}
+
+		}
+	}
+	else if (neighborhood == Oito) {
+
+		for (uint x = 0; x < src.rows; x++) {
+			for (uint y = 0; y < src.cols; y++) {
+
+				fill(temp, temp + array_size, 0); //set the array
+
+				if (x == 0) {
+					if (y == 0) {
+
+						temp[0] = src.at<uchar>(x, y);
+						temp[1] = src.at<uchar>(x + 1, y);
+						temp[2] = src.at<uchar>(x, y + 1);
+						temp[3] = src.at<uchar>(x + 1, y + 1);
+						out.at<uchar>(x, y) = (uint8_t)*max_element(temp, temp + array_size);
+
+					}
+					else if (y == (src.cols - 1)) {
+
+						temp[0] = src.at<uchar>(x, y);
+						temp[1] = src.at<uchar>(x + 1, y);
+						temp[2] = src.at<uchar>(x, y - 1);
+						temp[3] = src.at<uchar>(x + 1, y - 1);
+						out.at<uchar>(x, y) = (uint8_t)*max_element(temp, temp + array_size);
+
+					}
+					else {
+
+						temp[0] = src.at<uchar>(x, y);
+						temp[1] = src.at<uchar>(x + 1, y);
+						temp[2] = src.at<uchar>(x, y - 1);
+						temp[3] = src.at<uchar>(x, y + 1);
+						temp[4] = src.at<uchar>(x + 1, y + 1);
+						temp[5] = src.at<uchar>(x + 1, y - 1);
+						out.at<uchar>(x, y) = (uint8_t)*max_element(temp, temp + array_size);
+
+					}
+				}
+				else if (x == (src.rows - 1)) {
+					if (y == 0) {
+
+						temp[0] = src.at<uchar>(x, y);
+						temp[1] = src.at<uchar>(x - 1, y);
+						temp[2] = src.at<uchar>(x, y + 1);
+						temp[3] = src.at<uchar>(x - 1, y + 1);
+						out.at<uchar>(x, y) = (uint8_t)*max_element(temp, temp + array_size);
+
+					}
+					else if (y == (src.cols - 1)) {
+
+						temp[0] = src.at<uchar>(x, y);
+						temp[1] = src.at<uchar>(x - 1, y);
+						temp[2] = src.at<uchar>(x, y - 1);
+						temp[3] = src.at<uchar>(x - 1, y - 1);
+						out.at<uchar>(x, y) = (uint8_t)*max_element(temp, temp + array_size);
+
+					}
+					else {
+
+						temp[0] = src.at<uchar>(x, y);
+						temp[1] = src.at<uchar>(x - 1, y);
+						temp[2] = src.at<uchar>(x, y - 1);
+						temp[3] = src.at<uchar>(x, y + 1);
+						temp[4] = src.at<uchar>(x - 1, y + 1);
+						temp[5] = src.at<uchar>(x - 1, y - 1);
+						out.at<uchar>(x, y) = (uint8_t)*max_element(temp, temp + array_size);
+
+					}
+				}
+				else {
+					if (y == 0) {
+
+						temp[0] = src.at<uchar>(x, y);
+						temp[1] = src.at<uchar>(x + 1, y);
+						temp[2] = src.at<uchar>(x - 1, y);
+						temp[3] = src.at<uchar>(x, y + 1);
+						temp[4] = src.at<uchar>(x + 1, y + 1);
+						temp[5] = src.at<uchar>(x - 1, y + 1);
+						out.at<uchar>(x, y) = (uint8_t)*max_element(temp, temp + array_size);
+
+					}
+					else if (y == (src.cols - 1)) {
+
+						temp[0] = src.at<uchar>(x, y);
+						temp[1] = src.at<uchar>(x + 1, y);
+						temp[2] = src.at<uchar>(x - 1, y);
+						temp[3] = src.at<uchar>(x, y - 1);
+						temp[4] = src.at<uchar>(x + 1, y - 1);
+						temp[5] = src.at<uchar>(x - 1, y - 1);
+						out.at<uchar>(x, y) = (uint8_t)*max_element(temp, temp + array_size);
+
+					}
+					else {
+
+						temp[0] = src.at<uchar>(x, y);
+						temp[1] = src.at<uchar>(x + 1, y);
+						temp[2] = src.at<uchar>(x - 1, y);
+						temp[3] = src.at<uchar>(x, y - 1);
+						temp[4] = src.at<uchar>(x, y + 1);
+						temp[5] = src.at<uchar>(x + 1, y + 1);
+						temp[6] = src.at<uchar>(x - 1, y + 1);
+						temp[7] = src.at<uchar>(x + 1, y - 1);
+						temp[8] = src.at<uchar>(x - 1, y - 1);
+						out.at<uchar>(x, y) = (uint8_t)*max_element(temp, temp + array_size);
+
+					}
+				}
+			}
+		}
+	}
+
+
+free(temp);
+return out;
+}
+
+Mat vcpi_erosion(Mat src, TipoVizinhanca neighborhood){
+	if (src.empty()) {                	//check for input image
+		cout << "There is no image!" << endl;
+		return src;
+	}
+	else if ((neighborhood != Quatro) && (neighborhood != Oito)) {
+		cout << "Please select a valid pixel neighborhood" << endl;
+		return src;
+	}
+	uint8_t array_size = (uint)neighborhood + 1;
+
+	uint8_t *temp = (uint8_t *)malloc(array_size * sizeof(uint8_t));
+	Mat out = Mat(src.rows, src.cols, CV_8UC1, Scalar(0));
+
+	if (neighborhood == Quatro) {
+
+		for (uint x = 0; x < src.rows; x++) {
+			for (uint y = 0; y < src.cols; y++) {
+
+				fill(temp, temp + array_size, 255); //set the array
+
+				if (x == 0) {
+					if (y == 0) {
+						temp[0] = src.at<uchar>(x, y);
+						temp[1] = src.at<uchar>(x + 1, y);
+						temp[2] = src.at<uchar>(x, y + 1);
+						out.at<uchar>(x, y) = (uint8_t)*min_element(temp, temp + array_size);
+					}
+					else if (y == (src.cols - 1)) {
+
+						temp[0] = src.at<uchar>(x, y);
+						temp[1] = src.at<uchar>(x + 1, y);
+						temp[2] = src.at<uchar>(x, y - 1);
+						out.at<uchar>(x, y) = (uint8_t)*min_element(temp, temp + array_size);
+
+					}
+					else {
+
+						temp[0] = src.at<uchar>(x, y);
+						temp[1] = src.at<uchar>(x + 1, y);
+						temp[2] = src.at<uchar>(x, y - 1);
+						temp[3] = src.at<uchar>(x, y + 1);
+						out.at<uchar>(x, y) = (uint8_t)*min_element(temp, temp + array_size);
+
+					}
+
+				}
+				else if (x == (src.rows - 1)) {
+					if (y == 0) {
+
+						temp[0] = src.at<uchar>(x, y);
+						temp[1] = src.at<uchar>(x - 1, y);
+						temp[2] = src.at<uchar>(x, y + 1);
+						out.at<uchar>(x, y) = (uint8_t)*min_element(temp, temp + array_size);
+
+					}
+					else if (y == (src.cols - 1)) {
+
+						temp[0] = src.at<uchar>(x, y);
+						temp[1] = src.at<uchar>(x - 1, y);
+						temp[2] = src.at<uchar>(x, y - 1);
+						out.at<uchar>(x, y) = (uint8_t)*min_element(temp, temp + array_size);
+
+					}
+					else {
+
+						temp[0] = src.at<uchar>(x, y);
+						temp[1] = src.at<uchar>(x - 1, y);
+						temp[2] = src.at<uchar>(x, y - 1);
+						temp[3] = src.at<uchar>(x, y + 1);
+						out.at<uchar>(x, y) = (uint8_t)*min_element(temp, temp + array_size);
+
+					}
+				}
+				else {
+					if (y == 0) {
+
+						temp[0] = src.at<uchar>(x, y);
+						temp[1] = src.at<uchar>(x + 1, y);
+						temp[2] = src.at<uchar>(x - 1, y);
+						temp[3] = src.at<uchar>(x, y + 1);
+						out.at<uchar>(x, y) = (uint8_t)*min_element(temp, temp + array_size);
+
+					}
+					else if (y == (src.cols - 1)) {
+
+						temp[0] = src.at<uchar>(x, y);
+						temp[1] = src.at<uchar>(x + 1, y);
+						temp[2] = src.at<uchar>(x - 1, y);
+						temp[3] = src.at<uchar>(x, y - 1);
+						out.at<uchar>(x, y) = (uint8_t)*min_element(temp, temp + array_size);
+
+					}
+					else {
+
+						temp[0] = src.at<uchar>(x, y);
+						temp[1] = src.at<uchar>(x + 1, y);
+						temp[2] = src.at<uchar>(x - 1, y);
+						temp[3] = src.at<uchar>(x, y - 1);
+						temp[4] = src.at<uchar>(x, y + 1);
+						out.at<uchar>(x, y) = (uint8_t)*min_element(temp, temp + array_size);
+
+					}
+				}
+			}
+
+		}
+	}
+	else if (neighborhood == Oito) {
+
+		for (uint x = 0; x < src.rows; x++) {
+			for (uint y = 0; y < src.cols; y++) {
+
+				fill(temp, temp + array_size, 255); //set the array
+
+				if (x == 0) {
+					if (y == 0) {
+
+						temp[0] = src.at<uchar>(x, y);
+						temp[1] = src.at<uchar>(x + 1, y);
+						temp[2] = src.at<uchar>(x, y + 1);
+						temp[3] = src.at<uchar>(x + 1, y + 1);
+						out.at<uchar>(x, y) = (uint8_t)*min_element(temp, temp + array_size);
+
+					}
+					else if (y == (src.cols - 1)) {
+
+						temp[0] = src.at<uchar>(x, y);
+						temp[1] = src.at<uchar>(x + 1, y);
+						temp[2] = src.at<uchar>(x, y - 1);
+						temp[3] = src.at<uchar>(x + 1, y - 1);
+						out.at<uchar>(x, y) = (uint8_t)*min_element(temp, temp + array_size);
+
+					}
+					else {
+
+						temp[0] = src.at<uchar>(x, y);
+						temp[1] = src.at<uchar>(x + 1, y);
+						temp[2] = src.at<uchar>(x, y - 1);
+						temp[3] = src.at<uchar>(x, y + 1);
+						temp[4] = src.at<uchar>(x + 1, y + 1);
+						temp[5] = src.at<uchar>(x + 1, y - 1);
+						out.at<uchar>(x, y) = (uint8_t)*min_element(temp, temp + array_size);
+
+					}
+				}
+				else if (x == (src.rows - 1)) {
+					if (y == 0) {
+
+						temp[0] = src.at<uchar>(x, y);
+						temp[1] = src.at<uchar>(x - 1, y);
+						temp[2] = src.at<uchar>(x, y + 1);
+						temp[3] = src.at<uchar>(x - 1, y + 1);
+						out.at<uchar>(x, y) = (uint8_t)*min_element(temp, temp + array_size);
+
+					}
+					else if (y == (src.cols - 1)) {
+
+						temp[0] = src.at<uchar>(x, y);
+						temp[1] = src.at<uchar>(x - 1, y);
+						temp[2] = src.at<uchar>(x, y - 1);
+						temp[3] = src.at<uchar>(x - 1, y - 1);
+						out.at<uchar>(x, y) = (uint8_t)*min_element(temp, temp + array_size);
+
+					}
+					else {
+
+						temp[0] = src.at<uchar>(x, y);
+						temp[1] = src.at<uchar>(x - 1, y);
+						temp[2] = src.at<uchar>(x, y - 1);
+						temp[3] = src.at<uchar>(x, y + 1);
+						temp[4] = src.at<uchar>(x - 1, y + 1);
+						temp[5] = src.at<uchar>(x - 1, y - 1);
+						out.at<uchar>(x, y) = (uint8_t)*min_element(temp, temp + array_size);
+
+					}
+				}
+				else {
+					if (y == 0) {
+
+						temp[0] = src.at<uchar>(x, y);
+						temp[1] = src.at<uchar>(x + 1, y);
+						temp[2] = src.at<uchar>(x - 1, y);
+						temp[3] = src.at<uchar>(x, y + 1);
+						temp[4] = src.at<uchar>(x + 1, y + 1);
+						temp[5] = src.at<uchar>(x - 1, y + 1);
+						out.at<uchar>(x, y) = (uint8_t)*min_element(temp, temp + array_size);
+
+					}
+					else if (y == (src.cols - 1)) {
+
+						temp[0] = src.at<uchar>(x, y);
+						temp[1] = src.at<uchar>(x + 1, y);
+						temp[2] = src.at<uchar>(x - 1, y);
+						temp[3] = src.at<uchar>(x, y - 1);
+						temp[4] = src.at<uchar>(x + 1, y - 1);
+						temp[5] = src.at<uchar>(x - 1, y - 1);
+						out.at<uchar>(x, y) = (uint8_t)*min_element(temp, temp + array_size);
+
+					}
+					else {
+
+						temp[0] = src.at<uchar>(x, y);
+						temp[1] = src.at<uchar>(x + 1, y);
+						temp[2] = src.at<uchar>(x - 1, y);
+						temp[3] = src.at<uchar>(x, y - 1);
+						temp[4] = src.at<uchar>(x, y + 1);
+						temp[5] = src.at<uchar>(x + 1, y + 1);
+						temp[6] = src.at<uchar>(x - 1, y + 1);
+						temp[7] = src.at<uchar>(x + 1, y - 1);
+						temp[8] = src.at<uchar>(x - 1, y - 1);
+						out.at<uchar>(x, y) = (uint8_t)*min_element(temp, temp + array_size);
+
+					}
+				}
+			}
+		}
+	}
+
+	free(temp);
+	return out;
+}
+
+Mat vcpi_binary_close(Mat src, uint dilation_times, TipoVizinhanca dilation_neighborhood, uint erosion_times, TipoVizinhanca erosion_neighborhood) {
+
+	if (src.empty()) {                	//check for input image
+		cout << "There is no image!" << endl;
+		return src;
+	}
+	else if ((dilation_neighborhood != Quatro) && (dilation_neighborhood != Oito)) {
+		cout << "Please select a valid pixel dilation neighborhood" << endl;
+		return src;
+	}
+	else if ((erosion_neighborhood != Quatro) && (erosion_neighborhood != Oito)) {
+		cout << "Please select a valid pixel erosion neighborhood" << endl;
+		return src;
+	}
+	else if ((dilation_times<0) || (erosion_times<0)) {
+		cout << "Please select a valid pixel erosion and dilation value" << endl;
+		return src;
+	}
+	if (dilation_times == 0) {
+		cout << "Warning, number of dilations is zero" << endl;
+	}
+	else if (erosion_times == 0) {
+		cout << "Warning, number of erosions is zero" << endl;
+	}
+
+	Mat temp_one = src;//since 0 is supported as erosion and dilation this avoids outputting the wrong matrix
+	Mat temp_two = src;
+
+	for (uint i = 0; i < dilation_times; i++){     // this cycle improves execution time by avoiding to zero an array and performing a simple calculation
+		if (i%2 == 0){
+			temp_one = vcpi_dilation(temp_two, dilation_neighborhood);
+
+		}else{
+			temp_two = vcpi_dilation(temp_one, dilation_neighborhood);
+
+		}
+		
+	}
+	if (dilation_times %2 == 1){ //since 0 is supported as erosion and dilation this avoids outputting the wrong matrix
+		temp_two = temp_one;
+	}
+	else {
+		temp_one = temp_two;
+	}
+
+	for (uint i = 0; i < erosion_times; i++)
+	{
+		if (i % 2 == 0) {
+			temp_one = vcpi_erosion(temp_two, erosion_neighborhood);
+
+		}
+		else {
+			temp_two = vcpi_erosion(temp_one, erosion_neighborhood);
+
+		}
+	}
+
+	return ((erosion_times % 2) == 1 ? temp_one : temp_two); //choose the correct image to output
+}
+
+Mat vcpi_binary_open(Mat src, uint erosion_times, TipoVizinhanca erosion_neighborhood, uint dilation_times, TipoVizinhanca dilation_neighborhood) {
+
+	if (src.empty()) {                	//check for input image
+		cout << "There is no image!" << endl;
+		return src;
+	}
+	else if ((dilation_neighborhood != Quatro) && (dilation_neighborhood != Oito)) {
+		cout << "Please select a valid pixel dilation neighborhood" << endl;
+		return src;
+	}
+	else if ((erosion_neighborhood != Quatro) && (erosion_neighborhood != Oito)) {
+		cout << "Please select a valid pixel erosion neighborhood" << endl;
+		return src;
+	}
+	else if ((dilation_times < 0) || (erosion_times < 0)) {
+		cout << "Please select a valid pixel erosion and dilation value" << endl;
+		return src;
+	}
+	if (dilation_times == 0) {
+		cout << "Warning, number of dilations is zero" << endl;
+	}
+	else if (erosion_times == 0) {
+		cout << "Warning, number of erosions is zero" << endl;
+	}
+
+	Mat temp_one = src;  //since 0 is supported as erosion and dilation this avoids outputting the wrong matrix
+	Mat temp_two = src;
+
+	for (uint i = 0; i < erosion_times; i++) {
+		if (i % 2 == 0) {
+			temp_one = vcpi_erosion(temp_two, erosion_neighborhood);
+
+		}
+		else {
+			temp_two = vcpi_erosion(temp_one, erosion_neighborhood);
+
+		}
+	}
+	
+	if (erosion_times % 2 == 1){  //since 0 is supported as erosion and dilation this avoids outputting the wrong matrix
+		temp_two = temp_one;
+	}
+	else {
+		temp_one = temp_two;
+	}
+
+	for (uint i = 0; i < dilation_times; i++)
+	{
+		if (i % 2 == 0) {     // this cycle improves execution time by avoiding to zero an array and performing a simple calculation
+			temp_one = vcpi_dilation(temp_two, dilation_neighborhood);
+
+		}
+		else {
+			temp_two = vcpi_dilation(temp_one, dilation_neighborhood);
+
+		}
+	}
+
+	return ((dilation_times % 2) == 1 ? temp_one : temp_two); //choose the correct image to output
+}
+
+Mat vcpi_gray_edge_prewitt(Mat src, float th) {
+
+	if (src.empty()) {                	//check for input image
+		cout << "There is no image!" << endl;
+		return src;
+	}
+	
+	float percent_threshold = th == NULL ? 0.5f : th;
+
+	Mat prewitt_vertical(3, 3, CV_8SC1, Scalar(0));
+	prewitt_vertical.at<schar>(0, 0) = -1;
+	prewitt_vertical.at<schar>(0, 1) = -1;
+	prewitt_vertical.at<schar>(0, 2) = -1;
+	prewitt_vertical.at<schar>(2, 0) = 1;
+	prewitt_vertical.at<schar>(2, 1) = 1;
+	prewitt_vertical.at<schar>(2, 2) = 1;
+
+	Mat prewitt_horizontal(3, 3, CV_8SC1, Scalar(0));
+	prewitt_horizontal.at<schar>(0, 0) = -1;
+	prewitt_horizontal.at<schar>(1, 0) = -1;
+	prewitt_horizontal.at<schar>(2, 0) = -1;
+	prewitt_horizontal.at<schar>(0, 2) = 1;
+	prewitt_horizontal.at<schar>(1, 2) = 1;
+	prewitt_horizontal.at<schar>(2, 2) = 1;
+
+	uint kernel_size = prewitt_horizontal.cols;
+	int kern_pad = ((kernel_size - 1) / 2);
+	int array_size = kernel_size * kernel_size;
+
+	Mat vertical = Mat(src.rows, src.cols, CV_32S, Scalar(0));
+	Mat horizontal = Mat(src.rows, src.cols, CV_32S, Scalar(0));
+
+	for (uint x = kern_pad; x < (src.rows - kern_pad); x++) {           //run the image on one axis
+		for (uint y = kern_pad; y < (src.cols - kern_pad); y++) {      //run the image on another axis
+
+			int32_t matrix_sum = 0;  //variable to hold the matricial sum
+
+			for (int kern_x = -kern_pad; kern_x <= kern_pad; kern_x++) {       //run the kernel on one axis
+				for (int kern_y = -kern_pad; kern_y <= kern_pad; kern_y++) {    //run the kernel on another axis
+																				   //calculate the sum of points + kernel values surrounding the current point
+					matrix_sum += src.at<uchar>(x + kern_x, y + kern_y)*prewitt_vertical.at<schar>(kern_x + kern_pad, kern_y + kern_pad);
+				}
+			}
+			vertical.at<int>(x, y) = (int)matrix_sum;
+		}
+	}
+
+	for (uint x = kern_pad; x < (src.rows - kern_pad); x++) {           //run the image on one axis
+		for (uint y = kern_pad; y < (src.cols - kern_pad); y++) {      //run the image on another axis
+
+			int32_t matrix_sum = 0;  //variable to hold the matricial sum
+
+			for (int kern_x = -kern_pad; kern_x <= kern_pad; kern_x++) {       //run the kernel on one axis
+				for (int kern_y = -kern_pad; kern_y <= kern_pad; kern_y++) {    //run the kernel on another axis
+																				   //calculate the sum of points + kernel values surrounding the current point
+					matrix_sum += src.at<uchar>(x + kern_x, y + kern_y)*prewitt_horizontal.at<schar>(kern_x + kern_pad, kern_y + kern_pad);
+				}
+			}
+			horizontal.at<int>(x, y) = (int)matrix_sum;
+		}
+	}
+
+	Mat temp = Mat(src.rows, src.cols, CV_32S, Scalar(0));
+	uint32_t max = 0;
+	for (uint x = kern_pad; x < (src.rows - kern_pad); x++) {           //run the image on one axis
+		for (uint y = kern_pad; y < (src.cols - kern_pad); y++) {      //run the image on another axis
+
+			temp.at<int>(x, y) = (int32_t)sqrt(pow(vertical.at<int>(x, y), 2) + (pow(horizontal.at<int>(x, y), 2)));
+			max = (max >= temp.at<int>(x, y) ? max : temp.at<int>(x, y));
+
+		}
+	}
+
+	Mat out = Mat(src.rows, src.cols, CV_8UC1, Scalar(0));
+	uint threshold = round(max*percent_threshold);
+
+	for (uint x = kern_pad; x < (src.rows - kern_pad); x++) {           //run the image on one axis
+		for (uint y = kern_pad; y < (src.cols - kern_pad); y++) {      //run the image on another axis
+
+			if (temp.at<int>(x, y) >= threshold) {
+				out.at<uchar>(x, y) = 255;
+			}
+			else {
+				out.at<uchar>(x, y) = 0;
+			}
+		}
+	}
+
+	return out;
+}
+
+
+
+Mat vcpi_gray_edge_sobel(Mat src, float th) {
+
+	if (src.empty()) {                	//check for input image
+		cout << "There is no image!" << endl;
+		return src;
+	}
+
+	float percent_threshold = th == NULL ? 0.5f : th;
+
+	Mat sobel_vertical(3, 3, CV_8SC1, Scalar(0));
+	sobel_vertical.at<schar>(0, 0) = -1;
+	sobel_vertical.at<schar>(0, 1) = -2;
+	sobel_vertical.at<schar>(0, 2) = -1;
+	sobel_vertical.at<schar>(2, 0) = 1;
+	sobel_vertical.at<schar>(2, 1) = 2;
+	sobel_vertical.at<schar>(2, 2) = 1;
+
+	Mat sobel_horizontal(3, 3, CV_8SC1, Scalar(0));
+	sobel_horizontal.at<schar>(0, 0) = -1;
+	sobel_horizontal.at<schar>(1, 0) = -2;
+	sobel_horizontal.at<schar>(2, 0) = -1;
+	sobel_horizontal.at<schar>(0, 2) = 1;
+	sobel_horizontal.at<schar>(1, 2) = 2;
+	sobel_horizontal.at<schar>(2, 2) = 1;
+
+	uint kernel_size = sobel_horizontal.cols;
+	int kern_pad = ((kernel_size - 1) / 2);
+	int array_size = kernel_size * kernel_size;
+
+	Mat vertical = Mat(src.rows, src.cols, CV_32S, Scalar(0));
+	Mat horizontal = Mat(src.rows, src.cols, CV_32S, Scalar(0));
+
+	for (uint x = kern_pad; x < (src.rows - kern_pad); x++) {           //run the image on one axis
+		for (uint y = kern_pad; y < (src.cols - kern_pad); y++) {      //run the image on another axis
+
+			int32_t matrix_sum = 0;  //variable to hold the matricial sum
+
+			for (int kern_x = -kern_pad; kern_x <= kern_pad; kern_x++) {       //run the kernel on one axis
+				for (int kern_y = -kern_pad; kern_y <= kern_pad; kern_y++) {    //run the kernel on another axis
+																				   //calculate the sum of points + kernel values surrounding the current point
+					matrix_sum += src.at<uchar>(x + kern_x, y + kern_y)*sobel_vertical.at<schar>(kern_x + kern_pad, kern_y + kern_pad);
+				}
+			}
+			vertical.at<int>(x,y) = (int)matrix_sum;
+		}
+	}
+
+	for (uint x = kern_pad; x < (src.rows - kern_pad); x++) {           //run the image on one axis
+		for (uint y = kern_pad; y < (src.cols - kern_pad); y++) {      //run the image on another axis
+
+			int32_t matrix_sum = 0;  //variable to hold the matricial sum
+
+			for (int kern_x = -kern_pad; kern_x <= kern_pad; kern_x++) {       //run the kernel on one axis
+				for (int kern_y = -kern_pad; kern_y <= kern_pad; kern_y++) {    //run the kernel on another axis
+																				   //calculate the sum of points + kernel values surrounding the current point
+					matrix_sum += src.at<uchar>(x + kern_x, y + kern_y)*sobel_horizontal.at<schar>(kern_x + kern_pad, kern_y + kern_pad);
+				}
+			}
+			horizontal.at<int>(x, y) = (int)matrix_sum;
+		}
+	}
+
+	Mat temp = Mat(src.rows, src.cols, CV_32S, Scalar(0));
+	uint32_t max = 0;
+	for (uint x = kern_pad; x < (src.rows - kern_pad); x++) {           //run the image on one axis
+		for (uint y = kern_pad; y < (src.cols - kern_pad); y++) {      //run the image on another axis
+
+			temp.at<int>(x, y) = (int32_t) sqrt(pow(vertical.at<int>(x, y), 2) + (pow(horizontal.at<int>(x, y), 2)));
+			max = (max >= temp.at<int>(x, y) ? max : temp.at<int>(x, y));
+			
+		}
+	}
+
+	Mat out = Mat(src.rows, src.cols, CV_8UC1, Scalar(0));
+	uint threshold = round(max*percent_threshold);
+	
+	for (uint x = kern_pad; x < (src.rows - kern_pad); x++) {           //run the image on one axis
+		for (uint y = kern_pad; y < (src.cols - kern_pad); y++) {      //run the image on another axis
+
+			if (temp.at<int>(x, y)>=threshold){
+				out.at<uchar>(x, y) = 255;
+			}
+			else {
+				out.at<uchar>(x, y) = 0;
+			}
+		}
+	}
+
+	return out;
 }

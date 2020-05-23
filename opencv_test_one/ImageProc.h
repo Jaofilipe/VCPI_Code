@@ -31,7 +31,7 @@ extern Mat vcpi_gray_to_binary(Mat src, int Lower_threshold = 0, int Upper_thres
 extern Mat VCPI_Segmenta_Cor(Mat src, int Lower_h = 0, int Upper_h = 255, int Lower_s = 0,
 	int Upper_s = 255, int Lower_v = 0, int Upper_v = 255);
 extern Mat vcpi_scale_gray_to_rgb(Mat src);
-extern Mat vcpi_convolucao(Mat src, Mat kernel);
+extern Mat vcpi_convolucao(Mat src, Mat kernel,uint TYPE = CV_8UC1);
 extern Mat vcpi_median_filter(Mat src, uint kernel_size = 3);
 extern Mat vcpi_gray_to_binary_global_mean(Mat src);
 extern Mat vcpi_gray_to_binary_midpoint(Mat src, uint kernel_size = 3);
@@ -40,3 +40,9 @@ extern Mat vcpi_gray_to_binary_niblack(Mat src, uint kernel_size = 3, float k = 
 extern Mat vcpi_gray_to_binary_Region_Growing(Mat src, uint x, uint y, uint Lower_Limit = 10,
 	uint Upper_Limit = 10, TipoVizinhanca neighborhood = Quatro);
 extern Mat vcpi_gray_to_binary_otsu(Mat src);
+extern Mat vcpi_dilation(Mat src, TipoVizinhanca neighborhood = Quatro);
+extern Mat vcpi_erosion(Mat src, TipoVizinhanca neighborhood = Quatro);
+extern Mat vcpi_binary_close(Mat src, uint dilation_times = 2, TipoVizinhanca dilation_neighborhood = Quatro, uint erosion_times = 2, TipoVizinhanca erosion_neighborhood = Quatro);
+extern Mat vcpi_binary_open(Mat src, uint erosion_times = 2, TipoVizinhanca erosion_neighborhood = Quatro, uint dilation_times = 2, TipoVizinhanca dilation_neighborhood = Quatro);
+extern Mat vcpi_gray_edge_prewitt(Mat src, float th = 0.5f);
+extern Mat vcpi_gray_edge_sobel(Mat src, float th=0.5f);
