@@ -6,6 +6,8 @@
 #include <math.h>
 #include <deque>
 
+#define M_PI 3.14159265358979323846
+
 Mat drawShadedSquare(TipoQuadrado tipo) {
 	Mat square = Mat(256, 256, CV_8UC1);
 	switch (tipo)
@@ -1702,8 +1704,6 @@ Mat vcpi_gray_edge_prewitt(Mat src, float th) {
 	return out;
 }
 
-
-
 Mat vcpi_gray_edge_sobel(Mat src, float th) {
 
 	if (src.empty()) {                	//check for input image
@@ -1792,5 +1792,63 @@ Mat vcpi_gray_edge_sobel(Mat src, float th) {
 		}
 	}
 
+	//Mat angle = Mat(src.rows, src.cols, CV_16SC1, Scalar(0));
+	//for (uint x = kern_pad; x < (src.rows - kern_pad); x++) {           //run the image on one axis
+	//	for (uint y = kern_pad; y < (src.cols - kern_pad); y++) {      //run the image on another axis
+
+	//		
+	//			out.at<short>(x, y) =(int) round((atan(vertical.at<int>(x, y) / horizontal.at<int>(x, y))*180.0f)/ M_PI);
+
+	//	}
+	//}
+
+	return out;
+}
+
+Mat vcpi_binary_blob_labelling(Mat src) {
+
+	if (src.empty()) {                	//check for input image
+		cout << "There is no image!" << endl;
+		return src;
+	}
+
+	Mat out = Mat(src.rows, src.cols, CV_8UC1, Scalar(0));
+
+	uint8_t label = 1;
+	uint8_t neigh_pixels[4];
+
+	for (uint x = 1; x < src.cols-1; x++){
+		for (uint y = 1; y < src.rows-1; y++){
+
+			neigh_pixels[0] = src.at<uchar>(y+1, x-1);
+			neigh_pixels[1] = src.at<uchar>(y+1, x);
+			neigh_pixels[2] = src.at<uchar>(y+1, x+1);
+			neigh_pixels[3] = src.at<uchar>(y, x-1);
+
+			if (src.at<uchar>(y, x) == 255)
+			{
+				if ((neigh_pixels[0] | neigh_pixels[1] | neigh_pixels[2] | neigh_pixels[3])==0){
+					out.at <uchar>(y, x) = label;
+					label++;
+				}
+				else {
+					
+					uint8_t temp = 255;
+					for (uint8_t i = 0; i < 4; i++)//finding the minimum element
+					{
+						if ((neigh_pixels[i] != 0) &&(neigh_pixels[i] < temp)) {
+							temp = neigh_pixels[i];
+					}
+					out.at <uchar>(y, x) = temp;
+
+					for (uint8_t i = 0; i < 4; i++)//finding the minimum element
+					{
+						if (neigh_pixels[i] > temp) {
+							out = find_replace_value(out, neigh_pixels[1], temp);
+						}
+				}
+			}
+		}
+	}
 	return out;
 }
