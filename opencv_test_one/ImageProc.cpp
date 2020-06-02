@@ -1832,7 +1832,6 @@ Mat vcpi_binary_blob_labelling(Mat src) {
 					label++;
 				}
 				else {
-					
 					uint8_t temp = 255;
 					for (uint8_t i = 0; i < 4; i++)//finding the minimum element
 					{
@@ -1842,13 +1841,12 @@ Mat vcpi_binary_blob_labelling(Mat src) {
 					}
 					out.at<uchar>(y, x) = temp;
 					
-					for (uint8_t i = 0; i < 4; i++)//finding the minimum element
+					for (uint8_t i = 0; i < 4; i++)//replacing other elements
 					{
 						if ((neigh_pixels[i] < 255) && (neigh_pixels[i] > temp)) {
 							out = find_replace_value(out, neigh_pixels[i],temp);
 						}
 					}
-					
 				}
 			}
 			cout << (uint)label << endl;
@@ -1863,19 +1861,19 @@ Mat vcpi_binary_blob_improved_labelling(Mat src) {
 		return src;
 	}
 
-	Mat input = src;
-	Mat out = Mat(src.rows, src.cols, CV_8UC1, Scalar(0));
-	Mat mask = Mat(src.rows, src.cols, CV_8UC1, Scalar(0));
-	uint8_t label = 100;
+	Mat input = src; //input matrix to be analyzed
+	Mat out = Mat(src.rows, src.cols, CV_8UC1, Scalar(0)); //output matrix
+	Mat mask = Mat(src.rows, src.cols, CV_8UC1, Scalar(0)); //mask matrix
+	uint8_t label = 1;
 
 	for (uint y = 1; y < src.rows - 1; y++) {
 		for (uint x = 1; x < src.cols - 1; x++) {
 
 			if (input.at<uchar>(y, x) == 255) {
 				mask = vcpi_gray_to_binary_Region_Growing(input,y,x, 10, 10, Oito);
-				input ^= mask;
-				out |= find_replace_value(mask,255,label);
-				label++;
+				input ^= mask; //remove masked blob
+				out |= find_replace_value(mask,255,label); //label the said blob
+				label++; //increment labels
 			}
 		}
 	}
