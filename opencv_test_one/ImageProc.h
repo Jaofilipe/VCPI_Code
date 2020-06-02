@@ -47,3 +47,4 @@ extern Mat vcpi_binary_open(Mat src, uint erosion_times = 2, TipoVizinhanca eros
 extern Mat vcpi_gray_edge_prewitt(Mat src, float th = 0.5f);
 extern Mat vcpi_gray_edge_sobel(Mat src, float th=0.5f);
 extern Mat vcpi_binary_blob_labelling(Mat src);
+extern Mat vcpi_binary_blob_improved_labelling(Mat src);

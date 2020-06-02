@@ -607,7 +607,7 @@ Mat vcpi_gray_to_binary_Region_Growing(Mat src, uint x, uint y, uint Lower_Limit
 		cout << "Please select a valid pixel neighborhood" << endl;
 		return src;
 	}
-	else if ((x > src.cols) || (y >= src.rows)) {
+	else if ((x > src.rows) || (y >= src.cols)) {
 		cout << "Please select a valid pixel position" << endl;
 		return src;
 	}
@@ -1812,23 +1812,23 @@ Mat vcpi_binary_blob_labelling(Mat src) {
 		return src;
 	}
 
-	Mat out = Mat(src.rows, src.cols, CV_8UC1, Scalar(0));
+	Mat out = src;
 
 	uint8_t label = 1;
-	uint8_t neigh_pixels[4];
+	uint neigh_pixels[4];
 
-	for (uint x = 1; x < src.cols-1; x++){
-		for (uint y = 1; y < src.rows-1; y++){
+	for (uint y = 1; y < src.rows - 1; y++) {
+		for (uint x = 1; x < src.cols - 1; x++) {
 
-			neigh_pixels[0] = src.at<uchar>(y+1, x-1);
-			neigh_pixels[1] = src.at<uchar>(y+1, x);
-			neigh_pixels[2] = src.at<uchar>(y+1, x+1);
-			neigh_pixels[3] = src.at<uchar>(y, x-1);
+			neigh_pixels[0] = out.at<uchar>(y-1,x-1);
+			neigh_pixels[1] = out.at<uchar>(y - 1, x);
+			neigh_pixels[2] = out.at<uchar>(y - 1, x + 1);
+			neigh_pixels[3] = out.at<uchar>(y, x - 1);
 
 			if (src.at<uchar>(y, x) == 255)
 			{
-				if ((neigh_pixels[0] | neigh_pixels[1] | neigh_pixels[2] | neigh_pixels[3])==0){
-					out.at <uchar>(y, x) = label;
+				if ((neigh_pixels[0] == 0) && (neigh_pixels[1] == 0 ) && (neigh_pixels[2]==0) && (neigh_pixels[3] == 0)) {
+					out.at<uchar>(y, x) = label;
 					label++;
 				}
 				else {
@@ -1836,19 +1836,49 @@ Mat vcpi_binary_blob_labelling(Mat src) {
 					uint8_t temp = 255;
 					for (uint8_t i = 0; i < 4; i++)//finding the minimum element
 					{
-						if ((neigh_pixels[i] != 0) &&(neigh_pixels[i] < temp)) {
+						if ((neigh_pixels[i] != 0) && (neigh_pixels[i] < temp)) {
 							temp = neigh_pixels[i];
+						}
 					}
-					out.at <uchar>(y, x) = temp;
-
+					out.at<uchar>(y, x) = temp;
+					
 					for (uint8_t i = 0; i < 4; i++)//finding the minimum element
 					{
-						if (neigh_pixels[i] > temp) {
-							out = find_replace_value(out, neigh_pixels[1], temp);
+						if ((neigh_pixels[i] < 255) && (neigh_pixels[i] > temp)) {
+							out = find_replace_value(out, neigh_pixels[i],temp);
 						}
+					}
+					
 				}
+			}
+			cout << (uint)label << endl;
+		}
+	}
+	return out;
+}
+Mat vcpi_binary_blob_improved_labelling(Mat src) {
+
+	if (src.empty()) {                	//check for input image
+		cout << "There is no image!" << endl;
+		return src;
+	}
+
+	Mat input = src;
+	Mat out = Mat(src.rows, src.cols, CV_8UC1, Scalar(0));
+	Mat mask = Mat(src.rows, src.cols, CV_8UC1, Scalar(0));
+	uint8_t label = 100;
+
+	for (uint y = 1; y < src.rows - 1; y++) {
+		for (uint x = 1; x < src.cols - 1; x++) {
+
+			if (input.at<uchar>(y, x) == 255) {
+				mask = vcpi_gray_to_binary_Region_Growing(input,y,x, 10, 10, Oito);
+				input ^= mask;
+				out |= find_replace_value(mask,255,label);
+				label++;
 			}
 		}
 	}
+
 	return out;
 }
