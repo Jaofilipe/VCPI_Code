@@ -1880,3 +1880,42 @@ Mat vcpi_binary_blob_improved_labelling(Mat src) {
 
 	return out;
 }
+
+Mat vcpi_get_laser_line(Mat src) {
+
+	if (src.empty()) {                	//check for input image
+		cout << "There is no image!" << endl;
+		return src;
+	}
+
+	//remove the red channel to avoid artifacts
+	//convert to grayscale
+	Mat temp = vcpi_rgb_to_gray(vcpi_rgb_remove_red(src));
+
+	temp = vcpi_gray_edge_sobel(temp, 0.7f);
+	temp = vcpi_binary_close(temp, 20, Oito, 20);
+
+	Mat out = Mat(src.rows, src.cols, CV_8UC1, Scalar(0));
+
+	uint up_pos = 0;
+	uint low_pos = 0;
+
+	for (uint x = 0; x < temp.cols; x++) { //find the edges of the line and get the middle position
+		up_pos = 0;
+		low_pos = 0;
+		for (uint y = 0; y < temp.rows - 1; y++) {
+
+			if ((temp.at<uchar>(y, x) == 0) && (temp.at<uchar>(y + 1, x) == 255)) {
+				up_pos = y;
+			}
+			else if ((temp.at<uchar>(y, x) == 255) && (temp.at<uchar>(y + 1, x) == 0)) {
+				low_pos = y;
+			}
+		}
+
+		uint y_pos = (uint)ceil((up_pos + low_pos)*0.5f); //put the middle point of the line at 255
+		out.at<uchar>(y_pos, x) = 255;
+	}
+
+	return out;
+}
