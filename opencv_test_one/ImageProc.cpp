@@ -6,8 +6,6 @@
 #include <math.h>
 #include <deque>
 
-#define M_PI 3.14159265358979323846
-
 Mat drawShadedSquare(TipoQuadrado tipo) {
 	Mat square = Mat(256, 256, CV_8UC1);
 	switch (tipo)
@@ -258,7 +256,7 @@ Mat VCPI_Segmenta_Cor(Mat src, int Lower_h, int Upper_h, int Lower_s, int Upper_
 	int Up_V = Upper_v == NULL ? 255 : Upper_v;
 
 	//prompt the user of chosen HSV values in case of Null inputs
-	cout << "Parameters H:" << Low_H << ", " << Up_H << ", S: " << Low_S << ", " << Up_S << ", V: " << Low_V << ", " << Up_V << endl;
+	//cout << "Parameters H:" << Low_H << ", " << Up_H << ", S: " << Low_S << ", " << Up_S << ", V: " << Low_V << ", " << Up_V << endl;
 
 	Mat im_HSV = Mat(src.rows, src.cols, CV_8UC3); //HSV image variable
 	cvtColor(src, im_HSV, CV_BGR2HSV);             //convert RGB to HSV
@@ -611,11 +609,6 @@ Mat vcpi_gray_to_binary_Region_Growing(Mat src, uint x, uint y, uint Lower_Limit
 		cout << "Please select a valid pixel position" << endl;
 		return src;
 	}
-
-	typedef struct coordinates {
-		uint64_t x;
-		uint64_t y;
-	}coordinates;
 
 	uint8_t unchecked = 127;
 
@@ -1039,7 +1032,7 @@ Mat vcpi_gray_to_binary_otsu(Mat src) {
 			threshold = u;
 		}
 	}
-	cout << "Threshold:   " << threshold << endl;
+	//cout << "Threshold:   " << threshold << endl;
 	return vcpi_gray_to_binary(src, threshold);
 }
 
@@ -1849,7 +1842,6 @@ Mat vcpi_binary_blob_labelling(Mat src) {
 					}
 				}
 			}
-			cout << (uint)label << endl;
 		}
 	}
 	return out;
@@ -1918,4 +1910,35 @@ Mat vcpi_get_laser_line(Mat src) {
 	}
 
 	return out;
+}
+
+coordinates vcpi_blob_centroid(Mat src) {
+
+	coordinates centroid = { centroid.x = 0, centroid.y = 0 };
+
+	if (src.empty()) {                	//check for input image
+		cout << "There is no image!" << endl;
+		return centroid;
+	}
+	uint area = 0;
+	uint centerx = 0;
+	uint centery = 0;
+
+	for (uint y = 0; y < src.rows; y++) {
+		for (uint x = 0; x < src.cols; x++) {
+
+			if (src.at<uchar>(y, x) == 255) {
+
+				centerx +=  x;
+				centery += y;
+				area++;
+			}
+
+		}
+	}
+		
+	centroid.x = round(((double)centerx)/ ((double)area));
+	centroid.y = round(((double)centery) / ((double)area));
+
+	return centroid;
 }
