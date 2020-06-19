@@ -256,7 +256,7 @@ Mat VCPI_Segmenta_Cor(Mat src, int Lower_h, int Upper_h, int Lower_s, int Upper_
 	int Up_V = Upper_v == NULL ? 255 : Upper_v;
 
 	//prompt the user of chosen HSV values in case of Null inputs
-	cout << "Parameters H:" << Low_H << ", " << Up_H << ", S: " << Low_S << ", " << Up_S << ", V: " << Low_V << ", " << Up_V << endl;
+	//cout << "Parameters H:" << Low_H << ", " << Up_H << ", S: " << Low_S << ", " << Up_S << ", V: " << Low_V << ", " << Up_V << endl;
 
 	Mat im_HSV = Mat(src.rows, src.cols, CV_8UC3); //HSV image variable
 	cvtColor(src, im_HSV, CV_BGR2HSV);             //convert RGB to HSV
@@ -605,15 +605,10 @@ Mat vcpi_gray_to_binary_Region_Growing(Mat src, uint x, uint y, uint Lower_Limit
 		cout << "Please select a valid pixel neighborhood" << endl;
 		return src;
 	}
-	else if ((x > src.cols) || (y >= src.rows)) {
+	else if ((x > src.rows) || (y >= src.cols)) {
 		cout << "Please select a valid pixel position" << endl;
 		return src;
 	}
-
-	typedef struct coordinates {
-		uint64_t x;
-		uint64_t y;
-	}coordinates;
 
 	uint8_t unchecked = 127;
 
@@ -1037,7 +1032,7 @@ Mat vcpi_gray_to_binary_otsu(Mat src) {
 			threshold = u;
 		}
 	}
-	cout << "Threshold:   " << threshold << endl;
+	//cout << "Threshold:   " << threshold << endl;
 	return vcpi_gray_to_binary(src, threshold);
 }
 
@@ -1702,8 +1697,6 @@ Mat vcpi_gray_edge_prewitt(Mat src, float th) {
 	return out;
 }
 
-
-
 Mat vcpi_gray_edge_sobel(Mat src, float th) {
 
 	if (src.empty()) {                	//check for input image
@@ -1792,19 +1785,160 @@ Mat vcpi_gray_edge_sobel(Mat src, float th) {
 		}
 	}
 
+	//Mat angle = Mat(src.rows, src.cols, CV_16SC1, Scalar(0));
+	//for (uint x = kern_pad; x < (src.rows - kern_pad); x++) {           //run the image on one axis
+	//	for (uint y = kern_pad; y < (src.cols - kern_pad); y++) {      //run the image on another axis
+
+	//		
+	//			out.at<short>(x, y) =(int) round((atan(vertical.at<int>(x, y) / horizontal.at<int>(x, y))*180.0f)/ M_PI);
+
+	//	}
+	//}
+
 	return out;
 }
 
-Mat vcpi_expanded_countour(Mat src, int countour_thickness = 1) {
+Mat vcpi_binary_blob_labelling(Mat src) {
 
 	if (src.empty()) {                	//check for input image
 		cout << "There is no image!" << endl;
 		return src;
 	}
 
-	Mat out = vcpi_binary_close(src,countour_thickness,Oito,0,Quatro); //dilates the image by countour_thickness
+	Mat out = src;
 
-	out ^= src;
+	uint8_t label = 1;
+	uint neigh_pixels[4];
 
-	Return out;
+	for (uint y = 1; y < src.rows - 1; y++) {
+		for (uint x = 1; x < src.cols - 1; x++) {
+
+			neigh_pixels[0] = out.at<uchar>(y-1,x-1);
+			neigh_pixels[1] = out.at<uchar>(y - 1, x);
+			neigh_pixels[2] = out.at<uchar>(y - 1, x + 1);
+			neigh_pixels[3] = out.at<uchar>(y, x - 1);
+
+			if (src.at<uchar>(y, x) == 255)
+			{
+				if ((neigh_pixels[0] == 0) && (neigh_pixels[1] == 0 ) && (neigh_pixels[2]==0) && (neigh_pixels[3] == 0)) {
+					out.at<uchar>(y, x) = label;
+					label++;
+				}
+				else {
+					uint8_t temp = 255;
+					for (uint8_t i = 0; i < 4; i++)//finding the minimum element
+					{
+						if ((neigh_pixels[i] != 0) && (neigh_pixels[i] < temp)) {
+							temp = neigh_pixels[i];
+						}
+					}
+					out.at<uchar>(y, x) = temp;
+					
+					for (uint8_t i = 0; i < 4; i++)//replacing other elements
+					{
+						if ((neigh_pixels[i] < 255) && (neigh_pixels[i] > temp)) {
+							out = find_replace_value(out, neigh_pixels[i],temp);
+						}
+					}
+				}
+			}
+		}
+	}
+	return out;
+}
+Mat vcpi_binary_blob_improved_labelling(Mat src) {
+
+	if (src.empty()) {                	//check for input image
+		cout << "There is no image!" << endl;
+		return src;
+	}
+
+	Mat input = src; //input matrix to be analyzed
+	Mat out = Mat(src.rows, src.cols, CV_8UC1, Scalar(0)); //output matrix
+	Mat mask = Mat(src.rows, src.cols, CV_8UC1, Scalar(0)); //mask matrix
+	uint8_t label = 1;
+
+	for (uint y = 1; y < src.rows - 1; y++) {
+		for (uint x = 1; x < src.cols - 1; x++) {
+
+			if (input.at<uchar>(y, x) == 255) {
+				mask = vcpi_gray_to_binary_Region_Growing(input,y,x, 10, 10, Oito);
+				input ^= mask; //remove masked blob
+				out |= find_replace_value(mask,255,label); //label the said blob
+				label++; //increment labels
+			}
+		}
+	}
+
+	return out;
+}
+
+Mat vcpi_get_laser_line(Mat src) {
+
+	if (src.empty()) {                	//check for input image
+		cout << "There is no image!" << endl;
+		return src;
+	}
+
+	//remove the red channel to avoid artifacts
+	//convert to grayscale
+	Mat temp = vcpi_rgb_to_gray(vcpi_rgb_remove_red(src));
+
+	temp = vcpi_gray_edge_sobel(temp, 0.7f);
+	temp = vcpi_binary_close(temp, 20, Oito, 20);
+
+	Mat out = Mat(src.rows, src.cols, CV_8UC1, Scalar(0));
+
+	uint up_pos = 0;
+	uint low_pos = 0;
+
+	for (uint x = 0; x < temp.cols; x++) { //find the edges of the line and get the middle position
+		up_pos = 0;
+		low_pos = 0;
+		for (uint y = 0; y < temp.rows - 1; y++) {
+
+			if ((temp.at<uchar>(y, x) == 0) && (temp.at<uchar>(y + 1, x) == 255)) {
+				up_pos = y;
+			}
+			else if ((temp.at<uchar>(y, x) == 255) && (temp.at<uchar>(y + 1, x) == 0)) {
+				low_pos = y;
+			}
+		}
+
+		uint y_pos = (uint)ceil((up_pos + low_pos)*0.5f); //put the middle point of the line at 255
+		out.at<uchar>(y_pos, x) = 255;
+	}
+
+	return out;
+}
+
+coordinates vcpi_blob_centroid(Mat src) {
+
+	coordinates centroid = { centroid.x = 0, centroid.y = 0 };
+
+	if (src.empty()) {                	//check for input image
+		cout << "There is no image!" << endl;
+		return centroid;
+	}
+	uint area = 0;
+	uint centerx = 0;
+	uint centery = 0;
+
+	for (uint y = 0; y < src.rows; y++) {
+		for (uint x = 0; x < src.cols; x++) {
+
+			if (src.at<uchar>(y, x) == 255) {
+
+				centerx +=  x;
+				centery += y;
+				area++;
+			}
+
+		}
+	}
+		
+	centroid.x = round(((double)centerx)/ ((double)area));
+	centroid.y = round(((double)centery) / ((double)area));
+
+	return centroid;
 }

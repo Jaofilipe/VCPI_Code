@@ -2,6 +2,8 @@
 #include <opencv2/highgui.hpp>
 #include "opencv2/imgproc/imgproc.hpp"
 
+#define M_PI 3.14159265358979323846
+
 using namespace cv;
 using namespace std;
 
@@ -15,6 +17,11 @@ typedef enum TipoVizinhanca {  // typedef to set some names to help with shading
 	Quatro = 4,
 	Oito = 8
 } TipoVizinhanca;
+
+typedef struct coordinates {
+	uint64_t x;
+	uint64_t y;
+}coordinates;
 
 extern Mat drawShadedSquare(TipoQuadrado tipo);
 extern Mat find_replace_value(Mat src, uint value, uint replace_with);
@@ -46,4 +53,7 @@ extern Mat vcpi_binary_close(Mat src, uint dilation_times = 2, TipoVizinhanca di
 extern Mat vcpi_binary_open(Mat src, uint erosion_times = 2, TipoVizinhanca erosion_neighborhood = Quatro, uint dilation_times = 2, TipoVizinhanca dilation_neighborhood = Quatro);
 extern Mat vcpi_gray_edge_prewitt(Mat src, float th = 0.5f);
 extern Mat vcpi_gray_edge_sobel(Mat src, float th=0.5f);
-extern Mat vcpi_expanded_countour(Mat src, int countour_thickness = 1);
+extern Mat vcpi_binary_blob_labelling(Mat src);
+extern Mat vcpi_binary_blob_improved_labelling(Mat src);
+extern Mat vcpi_get_laser_line(Mat src);
+extern coordinates vcpi_blob_centroid(Mat src);
