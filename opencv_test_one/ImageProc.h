@@ -57,3 +57,4 @@ extern Mat vcpi_binary_blob_labelling(Mat src);
 extern Mat vcpi_binary_blob_improved_labelling(Mat src);
 extern Mat vcpi_get_laser_line(Mat src);
 extern coordinates vcpi_blob_centroid(Mat src);
+extern Mat vcpi_expanded_countour(Mat src, int countour_thickness = 1);
