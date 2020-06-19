@@ -1794,3 +1794,17 @@ Mat vcpi_gray_edge_sobel(Mat src, float th) {
 
 	return out;
 }
+
+Mat vcpi_expanded_countour(Mat src, int countour_thickness = 1) {
+
+	if (src.empty()) {                	//check for input image
+		cout << "There is no image!" << endl;
+		return src;
+	}
+
+	Mat out = vcpi_binary_close(src,countour_thickness,Oito,0,Quatro); //dilates the image by countour_thickness
+
+	out ^= src;
+
+	Return out;
+}

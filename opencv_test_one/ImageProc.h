@@ -46,3 +46,4 @@ extern Mat vcpi_binary_close(Mat src, uint dilation_times = 2, TipoVizinhanca di
 extern Mat vcpi_binary_open(Mat src, uint erosion_times = 2, TipoVizinhanca erosion_neighborhood = Quatro, uint dilation_times = 2, TipoVizinhanca dilation_neighborhood = Quatro);
 extern Mat vcpi_gray_edge_prewitt(Mat src, float th = 0.5f);
 extern Mat vcpi_gray_edge_sobel(Mat src, float th=0.5f);
+extern Mat vcpi_expanded_countour(Mat src, int countour_thickness = 1);
