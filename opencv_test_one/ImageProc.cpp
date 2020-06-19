@@ -6,6 +6,9 @@
 #include <math.h>
 #include <deque>
 
+using namespace cv;
+using namespace std;
+
 Mat drawShadedSquare(TipoQuadrado tipo) {
 	Mat square = Mat(256, 256, CV_8UC1);
 	switch (tipo)
@@ -1853,13 +1856,13 @@ Mat vcpi_binary_blob_improved_labelling(Mat src) {
 		return src;
 	}
 
-	Mat input = src; //input matrix to be analyzed
-	Mat out = Mat(src.rows, src.cols, CV_8UC1, Scalar(0)); //output matrix
-	Mat mask = Mat(src.rows, src.cols, CV_8UC1, Scalar(0)); //mask matrix
+	Mat input = src.clone(); //input matrix to be analyzed
+	Mat out = Mat(input.rows, input.cols, CV_8UC1, Scalar(0)); //output matrix
+	Mat mask = Mat(input.rows, input.cols, CV_8UC1, Scalar(0)); //mask matrix
 	uint8_t label = 1;
 
-	for (uint y = 1; y < src.rows - 1; y++) {
-		for (uint x = 1; x < src.cols - 1; x++) {
+	for (uint y = 1; y < input.rows - 1; y++) {
+		for (uint x = 1; x < input.cols - 1; x++) {
 
 			if (input.at<uchar>(y, x) == 255) {
 				mask = vcpi_gray_to_binary_Region_Growing(input,y,x, 10, 10, Oito);
@@ -1941,4 +1944,189 @@ coordinates vcpi_blob_centroid(Mat src) {
 	centroid.y = round(((double)centery) / ((double)area));
 
 	return centroid;
+}
+
+Mat vcpi_expanded_countour(Mat src, int countour_thickness = 1) {
+
+	if (src.empty()) {                	//check for input image
+		cout << "There is no image!" << endl;
+		return src;
+	}
+
+	Mat out = vcpi_binary_close(src, countour_thickness, Oito, 0, Quatro); //dilates the image by countour_thickness
+
+	out ^= src;
+
+	return out;
+}
+
+Mat vcpi_draw_circle_centroid(Mat src, uint circle_radius) {
+
+	if (src.empty()) {                	//check for input image
+		cout << "There is no image!" << endl;
+		return src;
+	}
+	else if (circle_radius<=0)
+	{
+		cout << "Circle Radius must be positive!" << endl;
+		return src;
+	}
+	
+	coordinates centroid = vcpi_blob_centroid(src);
+
+	Mat out = Mat(src.rows, src.cols, CV_8UC1, Scalar(0));
+
+	for (double y = 1; y < out.rows - 1; y++) {
+		for (double x = 1; x < out.cols - 1; x++) {
+
+			out.at<uchar>(y, x) = ((round(sqrt(pow((x - (double)centroid.x),2)+pow((y - (double)centroid.y),2))) <= circle_radius) ? 255 : 0);
+		}
+	}
+
+	return out;
+}
+
+
+Mat vcpi_draw_line_between_centroids(Mat src, coordinates centroid_1, coordinates centroid_2, uint line_thickness) {
+
+	if (src.empty()) {                	//check for input image
+		cout << "There is no image!" << endl;
+		return src;
+	}
+	else if (line_thickness <= 0)
+	{
+		cout << "Line Thickness must be positive!" << endl;
+		return src;
+	}
+
+	Mat out = Mat(src.rows, src.cols, CV_8UC1, Scalar(0));
+
+	double mx_normal = 0;
+	double dividend_normal = (double)centroid_2.y - (double)centroid_1.y;
+	double divider_normal  = round((double)centroid_2.x - (double)centroid_1.x);
+	mx_normal = divider_normal == 0 ? 0 : (double)dividend_normal / (double)divider_normal;
+	int b_normal = centroid_1.y - (centroid_1.x*mx_normal);
+
+		double mx_inv = 0;
+		double dividend_inv = (double)centroid_2.x - (double)centroid_1.x;
+		double divider_inv = round((double)centroid_2.y - (double)centroid_1.y);
+		mx_inv = divider_inv == 0 ? 0 : (double)dividend_inv / (double)divider_inv;
+		int b_inv = centroid_1.x - (centroid_1.y*mx_inv);
+	
+	for (double y = 1; y < out.rows - 1; y++) {
+		for (double x = 1; x < out.cols - 1; x++) {
+			if (((x<=centroid_1.x && x >=centroid_2.x) || (x >= centroid_1.x && x <= centroid_2.x)) && ((y <= centroid_1.y && y >= centroid_2.y) || (y >= centroid_1.y && y <= centroid_2.y)))
+			{
+				if ((divider_normal != 0) && (abs(round(mx_normal)) <= 1))
+				{
+					double equation_normal = ((double)x * (double)mx_normal) + (double)b_normal;
+					out.at<uchar>(y, x) = (y == round(equation_normal)) ? 255 : 0;
+				}
+				else {
+					double equation_inv = ((double)y * (double)mx_inv) + (double)b_inv;
+					out.at<uchar>(y, x) = (x == round(equation_inv)) ? 255 : 0;
+				}
+				
+			}
+		}
+	}
+
+	return out;
+}
+
+coordinates home_point;
+
+int point_compare(const void *vp1, const void *vp2)
+{
+	Point *p1 = (Point *)vp1;
+	Point *p2 = (Point *)vp2;
+
+	// Find orientation 
+	int o;
+
+	int val = ((*p1).y - home_point.y) * ((*p2).x - (*p1).x) - ((*p1).x - home_point.x) * ((*p2).y - (*p1).y);
+	if (val == 0) {
+		o = 0;
+	}
+	else {
+		o = (val > 0) ? 1 : 2;
+	}
+
+	if (o == 0) {
+		uint distance_one = (home_point.x - (*p1).x)*(home_point.x - (*p1).x) + (home_point.y - (*p1).y)*(home_point.y - (*p1).y);
+		uint distance_two = (home_point.x - (*p2).x)*(home_point.x - (*p2).x) + (home_point.y - (*p2).y)*(home_point.y - (*p2).y);
+		return (distance_two >= distance_one) ? -1 : 1;
+	}
+
+	return (o == 2) ? -1 : 1;
+}
+
+Mat vcpi_draw_line_labels_centroid(Mat src, uint line_thickness) {
+
+	if (src.empty()) {                	//check for input image
+		cout << "There is no image!" << endl;
+		return src;
+	}
+	else if (line_thickness <= 0)
+	{
+		cout << "Line Thickness must be positive!" << endl;
+		return src;
+	}
+
+	uint max_labels = 0;
+	for (uint i = 0; i < src.cols*src.rows; i++) {
+		max_labels = src.data[i] > max_labels ? src.data[i] : max_labels;
+	}
+
+	Mat out = Mat(src.rows, src.cols, CV_8UC1, Scalar(0));
+
+	if (max_labels>=2)
+	{
+	
+	coordinates *points = (coordinates *)malloc((max_labels) * sizeof(coordinates));
+	
+	for (uint i = 0; i < max_labels; i++) {
+		Mat blob = find_replace_value(src, i+1, 255);
+		points[i] = vcpi_blob_centroid(blob);
+	}
+
+	int ymin = points[0].y, min = 0;
+	for (uint i = 0; i < max_labels; i++)
+	{
+		// Pick the bottom-most. In case of tie, chose the 
+		// left most point 
+		if ((points[i].y < ymin) || (ymin == points[i].y && points[i].x < points[min].x)) {
+			ymin = points[i].y;
+			min = i;
+		}
+	}
+
+	// Place the bottom-most point at first position 
+
+	coordinates temp = points[0];
+	points[0] = points[min];
+	points[min] = temp;
+
+	// Sort n-1 points with respect to the first point. 
+	// A point p1 comes before p2 in sorted ouput if p2 
+	// has larger polar angle (in counterclockwise 
+	// direction) than p1 
+	home_point = points[0];
+	
+	qsort(&points[1], max_labels - 1, sizeof(coordinates), point_compare);
+
+	// Now stack has the output points, print contents 
+	// of stack 
+
+	
+		for (uint i = 0; i < max_labels-1; i++)
+		{
+			out |= vcpi_draw_line_between_centroids(out, points[i], points[i + 1]);
+		}
+		out |= vcpi_draw_line_between_centroids(out, points[0], points[max_labels-1]);
+	
+	//draw line from the remaining point to the first point
+	free(points);
+	}
+	return out;
 }
