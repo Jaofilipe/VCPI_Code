@@ -1513,8 +1513,8 @@ Mat vcpi_binary_close(Mat src, uint dilation_times, TipoVizinhanca dilation_neig
 		cout << "Warning, number of erosions is zero" << endl;
 	}
 
-	Mat temp_one = src;//since 0 is supported as erosion and dilation this avoids outputting the wrong matrix
-	Mat temp_two = src;
+	Mat temp_one = src.clone();//since 0 is supported as erosion and dilation this avoids outputting the wrong matrix
+	Mat temp_two = src.clone();
 
 	for (uint i = 0; i < dilation_times; i++){     // this cycle improves execution time by avoiding to zero an array and performing a simple calculation
 		if (i%2 == 0){
@@ -1573,8 +1573,8 @@ Mat vcpi_binary_open(Mat src, uint erosion_times, TipoVizinhanca erosion_neighbo
 		cout << "Warning, number of erosions is zero" << endl;
 	}
 
-	Mat temp_one = src;  //since 0 is supported as erosion and dilation this avoids outputting the wrong matrix
-	Mat temp_two = src;
+	Mat temp_one = src.clone();  //since 0 is supported as erosion and dilation this avoids outputting the wrong matrix
+	Mat temp_two = src.clone();
 
 	for (uint i = 0; i < erosion_times; i++) {
 		if (i % 2 == 0) {
@@ -1808,7 +1808,7 @@ Mat vcpi_binary_blob_labelling(Mat src) {
 		return src;
 	}
 
-	Mat out = src;
+	Mat out = src.clone();
 
 	uint8_t label = 1;
 	uint neigh_pixels[4];
@@ -1946,7 +1946,7 @@ coordinates vcpi_blob_centroid(Mat src) {
 	return centroid;
 }
 
-Mat vcpi_expanded_countour(Mat src, int countour_thickness = 1) {
+Mat vcpi_expanded_countour(Mat src, uint countour_thickness) {
 
 	if (src.empty()) {                	//check for input image
 		cout << "There is no image!" << endl;
