@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <math.h>
 #include <deque>
+#include <string> 
 
 using namespace cv;
 using namespace std;
@@ -62,6 +63,46 @@ Mat find_replace_value(Mat src, uint value, uint replace_with) {
 	}
 	return out;
 }
+
+Mat find_create_with(Mat src, uint value, uint red, uint green, uint blue) {
+
+	if (src.empty()) {
+		cout << "There is no image!" << endl;
+		return src;
+	}
+	Mat out = Mat(src.rows, src.cols, CV_8UC3, Scalar(0));
+	uint helper = 0;
+	for (uint i = 0; i < src.cols * src.rows ; i++) {
+		if (src.data[i] == value) {
+			out.data[helper] = blue ;
+			out.data[helper+1] = green;
+			out.data[helper+2] = red;
+		}
+		else {
+			out.data[helper] = 0;
+			out.data[helper + 1] = 0;
+			out.data[helper + 2] = 0;
+		}
+		helper += out.channels();
+	}
+	return out;
+}
+
+Mat find_apply_created(Mat src, Mat src_created) {
+
+	if (src.empty() || src_created.empty()) {
+		cout << "There is no image!" << endl;
+		return src;
+	}
+	Mat out = Mat(src.rows, src.cols, CV_8UC3, Scalar(0));
+	
+	for (uint i = 0; i < src.cols * src.rows * src.channels(); i++) {
+		out.data[i] = (src_created.data[i] > 0) ? src_created.data[i] : src.data[i];
+			
+	}
+	return out;
+}
+
 
 Mat vcpi_gray_negative(Mat src) {
 
@@ -1816,7 +1857,7 @@ Mat vcpi_binary_blob_labelling(Mat src) {
 	for (uint y = 1; y < src.rows - 1; y++) {
 		for (uint x = 1; x < src.cols - 1; x++) {
 
-			neigh_pixels[0] = out.at<uchar>(y-1,x-1);
+			neigh_pixels[0] = out.at<uchar>(y - 1,x-1);
 			neigh_pixels[1] = out.at<uchar>(y - 1, x);
 			neigh_pixels[2] = out.at<uchar>(y - 1, x + 1);
 			neigh_pixels[3] = out.at<uchar>(y, x - 1);
@@ -1923,7 +1964,7 @@ coordinates vcpi_blob_centroid(Mat src) {
 		cout << "There is no image!" << endl;
 		return centroid;
 	}
-	uint area = 0;
+	uint64_t area = 0;
 	uint centerx = 0;
 	uint centery = 0;
 
@@ -1942,7 +1983,7 @@ coordinates vcpi_blob_centroid(Mat src) {
 		
 	centroid.x = round(((double)centerx)/ ((double)area));
 	centroid.y = round(((double)centery) / ((double)area));
-
+	centroid.area = area;
 	return centroid;
 }
 
@@ -1979,7 +2020,7 @@ Mat vcpi_draw_circle_centroid(Mat src, uint circle_radius) {
 	for (double y = 1; y < out.rows - 1; y++) {
 		for (double x = 1; x < out.cols - 1; x++) {
 
-			out.at<uchar>(y, x) = ((round(sqrt(pow((x - (double)centroid.x),2)+pow((y - (double)centroid.y),2))) <= circle_radius) ? 255 : 0);
+			out.at<uchar>(y, x) = ((round(sqrt(pow((x - (double)centroid.x),2) + pow((y - (double)centroid.y),2))) <= circle_radius) ? 255 : 0);
 		}
 	}
 
@@ -1998,6 +2039,10 @@ Mat vcpi_draw_line_between_centroids(Mat src, coordinates centroid_1, coordinate
 		cout << "Line Thickness must be positive!" << endl;
 		return src;
 	}
+
+	uint half_thick_one = (uint)line_thickness / 2;
+	uint half_thick_two = line_thickness % 2 == 0 ? half_thick_one : half_thick_one + 1;
+	
 
 	Mat out = Mat(src.rows, src.cols, CV_8UC1, Scalar(0));
 
@@ -2020,11 +2065,11 @@ Mat vcpi_draw_line_between_centroids(Mat src, coordinates centroid_1, coordinate
 				if ((divider_normal != 0) && (abs(round(mx_normal)) <= 1))
 				{
 					double equation_normal = ((double)x * (double)mx_normal) + (double)b_normal;
-					out.at<uchar>(y, x) = (y == round(equation_normal)) ? 255 : 0;
+					out.at<uchar>(y, x) = ((y >= (floor(equation_normal) - half_thick_one)) && (y <= (floor(equation_normal) + half_thick_two ))) ? 255 : 0;
 				}
 				else {
 					double equation_inv = ((double)y * (double)mx_inv) + (double)b_inv;
-					out.at<uchar>(y, x) = (x == round(equation_inv)) ? 255 : 0;
+					out.at<uchar>(y, x) = ((x >= (floor(equation_inv) - half_thick_two)) && (x <= (floor(equation_inv) + half_thick_two))) ? 255 : 0;
 				}
 				
 			}
@@ -2121,12 +2166,39 @@ Mat vcpi_draw_line_labels_centroid(Mat src, uint line_thickness) {
 	
 		for (uint i = 0; i < max_labels-1; i++)
 		{
-			out |= vcpi_draw_line_between_centroids(out, points[i], points[i + 1]);
+			out |= vcpi_draw_line_between_centroids(out, points[i], points[i + 1],line_thickness);
 		}
-		out |= vcpi_draw_line_between_centroids(out, points[0], points[max_labels-1]);
+		out |= vcpi_draw_line_between_centroids(out, points[0], points[max_labels-1], line_thickness);
 	
 	//draw line from the remaining point to the first point
 	free(points);
 	}
+	return out;
+}
+
+Mat vcpi_filter_blob_area(Mat src,uint min_area) {
+
+	if (src.empty()) {                	//check for input image
+		cout << "There is no image!" << endl;
+		return src;
+	}
+	Mat input = src.clone();
+	Mat out = Mat(src.rows, src.cols, CV_8UC1, Scalar(0));
+	uint max_labels = 0;
+	for (uint i = 0; i < src.cols * src.rows; i++) {
+		max_labels = input.data[i] > max_labels ? input.data[i] : max_labels;
+	}
+	
+	coordinates centroid;
+	Mat temp = Mat(src.rows, src.cols, CV_8UC1, Scalar(0));
+
+	for (uint i = 1; i <= max_labels; i++) {
+		temp = find_replace_value(input, i, 255);
+		centroid = vcpi_blob_centroid(temp);
+		if (centroid.area >= min_area) {
+			out |= temp;
+		}
+	}
+
 	return out;
 }

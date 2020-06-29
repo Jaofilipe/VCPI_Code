@@ -21,10 +21,13 @@ typedef enum TipoVizinhanca {  // typedef to set some names to help with shading
 typedef struct coordenadas {
 	uint64_t x;
 	uint64_t y;
+	uint64_t area;
 }coordinates;
 
 extern Mat drawShadedSquare(TipoQuadrado tipo);
 extern Mat find_replace_value(Mat src, uint value, uint replace_with);
+extern Mat find_create_with(Mat src, uint value, uint red, uint green, uint blue);
+extern Mat find_apply_created(Mat src, Mat src_created);
 extern Mat vcpi_gray_negative(Mat src);
 extern Mat vcpi_rgb_negative(Mat src);
 extern Mat vcpi_rgb_remove_red(Mat src);
@@ -38,7 +41,7 @@ extern Mat vcpi_gray_to_binary(Mat src, int Lower_threshold = 0, int Upper_thres
 extern Mat VCPI_Segmenta_Cor(Mat src, int Lower_h = 0, int Upper_h = 255, int Lower_s = 0,
 	int Upper_s = 255, int Lower_v = 0, int Upper_v = 255);
 extern Mat vcpi_scale_gray_to_rgb(Mat src);
-extern Mat vcpi_convolucao(Mat src, Mat kernel,uint TYPE = CV_8UC1);
+extern Mat vcpi_convolucao(Mat src, Mat kernel);
 extern Mat vcpi_median_filter(Mat src, uint kernel_size = 3);
 extern Mat vcpi_gray_to_binary_global_mean(Mat src);
 extern Mat vcpi_gray_to_binary_midpoint(Mat src, uint kernel_size = 3);
@@ -61,3 +64,4 @@ Mat vcpi_expanded_countour(Mat src, uint countour_thickness = 1);
 extern Mat vcpi_draw_circle_centroid(Mat src,uint circle_radius=4);
 extern Mat vcpi_draw_line_between_centroids(Mat src, coordinates centroid_1, coordinates centroid_2, uint line_thickness = 2);
 extern Mat vcpi_draw_line_labels_centroid(Mat src,uint line_thickness=2);
+extern Mat vcpi_filter_blob_area(Mat src, uint min_area = 1);
