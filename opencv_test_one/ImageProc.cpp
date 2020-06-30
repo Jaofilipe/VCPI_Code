@@ -415,6 +415,68 @@ Mat vcpi_convolucao(Mat src, Mat kernel) {
 	return out;
 }
 
+Mat vcpi_convolucao_freqs(Mat src, Mat kernel, double divide_by) {
+	 
+	//same as convolucao but supports negative elements on matrix
+
+	if (src.empty()) {                	//check for input image
+		cout << "There is no image!" << endl;
+		return src;
+	}
+	else if (kernel.empty()) {          	//check for input kernel
+		cout << "There is no kernel!" << endl;
+		return src;
+	}
+	else if ((kernel.rows % 2) == 0 || (kernel.rows % 2) == 0) { 	//kernel must not have pair dimensions, but can have different dimensions
+		cout << "Kernel dimensions must not be pair!" << endl;
+		return src;
+	}
+	//find the kernel midpoint
+	int kern_pad_x = (kernel.rows == 1 ? 0 : ((kernel.rows - 1) / 2));
+	int kern_pad_y = (kernel.cols == 1 ? 0 : ((kernel.rows - 1) / 2));
+
+	Mat temp = Mat(src.rows, src.cols, CV_32FC1, Scalar(0));
+
+	for (uint x = kern_pad_x; x < (src.rows - kern_pad_x); x++) {           //run the image on one axis
+		for (uint y = kern_pad_y; y < (src.cols - kern_pad_y); y++) {      //run the image on another axis
+
+			double matrix_sum = 0.0f;                                              //variable to hold the matricial sum
+			for (int kern_x = -kern_pad_x; kern_x <= kern_pad_x; kern_x++) {       //run the kernel on one axis
+				for (int kern_y = -kern_pad_y; kern_y <= kern_pad_y; kern_y++) {    //run the kernel on another axis
+																				   //calculate the sum of points + kernel values surrounding the current point
+					matrix_sum += src.at<uchar>(x + kern_x, y + kern_y) * kernel.at<schar>(kern_x + kern_pad_x, kern_y + kern_pad_y);
+				}
+			}
+			temp.at<float>(x, y) = (float)((double)matrix_sum / (double)divide_by);
+		}
+	}
+	uint max_value = 0;  //find the maximum value of function to equalize the data 
+	uint holder = 0;
+	for (uint i = 0; i < src.cols * src.rows; i++) {
+		holder = (uint)round(temp.data[i]);
+		max_value = (holder > max_value) ? holder : max_value;
+	}
+
+
+	Mat out = Mat(src.rows, src.cols, CV_8UC1, Scalar(0));
+
+	if (max_value > 255) {
+		for (uint i = 0; i < src.cols * src.rows; i++) {
+			out.data[i] = (temp.data[i] > 0) ? ((uint)round(((temp.data[i] * 255.0) / ((double)max_value)))) : ((uint)0);
+		}
+	}
+	else {
+		for (uint i = 0; i < src.cols * src.rows; i++) {
+			out.data[i] = (temp.data[i] > 0) ? ((uint)round(temp.data[i])) : ((uint)0);
+		}
+
+	}
+
+
+	
+return out;
+}
+
 Mat vcpi_median_filter(Mat src, uint kernel_size) {
 
 	if (src.empty()) {                	//check for input image

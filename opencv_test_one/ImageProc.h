@@ -42,6 +42,7 @@ extern Mat VCPI_Segmenta_Cor(Mat src, int Lower_h = 0, int Upper_h = 255, int Lo
 	int Upper_s = 255, int Lower_v = 0, int Upper_v = 255);
 extern Mat vcpi_scale_gray_to_rgb(Mat src);
 extern Mat vcpi_convolucao(Mat src, Mat kernel);
+extern Mat vcpi_convolucao_freqs(Mat src, Mat kernel, double divide_by = 1);
 extern Mat vcpi_median_filter(Mat src, uint kernel_size = 3);
 extern Mat vcpi_gray_to_binary_global_mean(Mat src);
 extern Mat vcpi_gray_to_binary_midpoint(Mat src, uint kernel_size = 3);
@@ -60,7 +61,7 @@ extern Mat vcpi_binary_blob_labelling(Mat src);
 extern Mat vcpi_binary_blob_improved_labelling(Mat src);
 extern Mat vcpi_get_laser_line(Mat src);
 extern coordinates vcpi_blob_centroid(Mat src);
-Mat vcpi_expanded_countour(Mat src, uint countour_thickness = 1);
+extern Mat vcpi_expanded_countour(Mat src, uint countour_thickness = 1);
 extern Mat vcpi_draw_circle_centroid(Mat src,uint circle_radius=4);
 extern Mat vcpi_draw_line_between_centroids(Mat src, coordinates centroid_1, coordinates centroid_2, uint line_thickness = 2);
 extern Mat vcpi_draw_line_labels_centroid(Mat src,uint line_thickness=2);
